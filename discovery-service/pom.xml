@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.dmatch</groupId>
-	<artifactId>discorvery-service</artifactId>
+	<artifactId>discovery-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>discorver-service</name>
+	<name>discovery-service</name>
 	<description>abc</description>
 	<url/>
 	<licenses>
