@@ -1,5 +1,6 @@
-package com.dmatch.userservice.services.implementaions;
+package com.dmatch.userservice.services.implementations;
 
+import com.dmatch.userservice.commons.RoleName;
 import com.dmatch.userservice.commons.UserStatus;
 import com.dmatch.userservice.dtos.UserCreateDTO;
 import com.dmatch.userservice.entities.Role;
@@ -14,6 +15,8 @@ import com.dmatch.userservice.repositories.UserRepository;
 import com.dmatch.userservice.services.interfaces.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -28,45 +31,58 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public InternalUserResponse createUser(UserCreateDTO userCreateDTO) {
+    public UserResponse createUser(UserCreateDTO userCreateDTO) {
         String email = userCreateDTO.getEmail();
+
         if (userRepository.existsByEmail(email)) {
             throw new InvalidBodyException("Email already exists");
         }
-        Role role = roleRepository.findByName(userCreateDTO.getRole())
-                .orElseThrow(() -> new PermissionDeniedException("Role not found"));
+        Role role = roleRepository.findByName(RoleName.USER.name())
+                .orElseThrow(() -> new DataNotFoundException("Default role USER not found in Database"));
         Set<Role> roles = new HashSet<>();
         roles.add(role);
 
         User user = User.builder()
                 .email(userCreateDTO.getEmail())
-                .password(userCreateDTO.getPassword())
+                .password(userCreateDTO.getPassword()) // Password đã hash
                 .fullName(userCreateDTO.getFullName())
                 .status(UserStatus.ACTIVE)
                 .roles(roles)
                 .build();
 
         userRepository.save(user);
-        return InternalUserResponse.fromUser(user);
+        return UserResponse.fromUser(user);
     }
 
     @Override
-    public InternalUserResponse getUserById(Long id) {
+    public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("User not found with id: " + id));
-        return InternalUserResponse.fromUser(user);
+        return UserResponse.fromUser(user);
     }
 
     @Override
     public InternalUserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + email));
         return InternalUserResponse.fromUser(user);
     }
 
     @Override
     public UserResponse getCurrentUser() {
-        throw new RuntimeException("Method logic not implemented yet");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new PermissionDeniedException("User is not logged in");
+        }
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new DataNotFoundException("Current user not found"));
+
+        return UserResponse.fromUser(user);
+
     }
 
     @Override
@@ -75,12 +91,13 @@ public class UserServiceImpl implements UserService {
         return users.stream().map(UserResponse::fromUser).toList();
     }
 
+    @Transactional
     @Override
     public UserResponse changeUserStatus(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        if (user.getStatus().equals(UserStatus.ACTIVE)) {
+        if (UserStatus.ACTIVE.equals(user.getStatus())) {
             user.setStatus(UserStatus.BANNED);
         } else {
             user.setStatus(UserStatus.ACTIVE);

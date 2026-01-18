@@ -5,13 +5,27 @@ spring:
   application:
     name: api-gateway
   cloud:
+    loadbalancer:
+      cache:
+        ttl: 2s
+        capacity: 256
     gateway:
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: true
+          enabled: false
+          lower-case-service-id: false
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/internal/users/**, /api/v1/users/**, /api/v1/admin/users/**
 
 eureka:
   client:
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 2
     service-url:
-      defaultZone: http://localhost:8111/eureka
+      defaultZone: http://localhost:8111/eureka/
+  instance:
+    prefer-ip-address: true

@@ -5,6 +5,9 @@ spring:
   application:
     name: discovery-service
 eureka:
+  server:
+    enable-self-preservation: false
+    response-cache-update-interval-ms: 3000
   client:
     register-with-eureka: false
     fetch-registry: false

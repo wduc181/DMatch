@@ -7,8 +7,8 @@ import com.dmatch.userservice.reponses.UserResponse;
 import java.util.List;
 
 public interface UserService {
-    InternalUserResponse createUser(UserCreateDTO userCreateDTO);
-    InternalUserResponse getUserById(Long id);
+    UserResponse createUser(UserCreateDTO userCreateDTO);
+    UserResponse getUserById(Long id);
     InternalUserResponse getUserByEmail(String email);
     UserResponse getCurrentUser();
     List<UserResponse> getAllUsers();
