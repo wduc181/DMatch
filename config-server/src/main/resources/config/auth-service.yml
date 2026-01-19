@@ -1,0 +1,22 @@
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000
+  refresh-expiration: 86400000
+
+logging:
+  level:
+    root: INFO
+    com.dmatch.authservice: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO
+
+app:
+  api-prefix: /api/v1
+  internal-prefix: /internal
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    lease-renewal-interval-in-seconds: 3
+    lease-expiration-duration-in-seconds: 10
