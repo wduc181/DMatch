@@ -1,8 +1,8 @@
 package com.dmatch.userservice.services.interfaces;
 
 import com.dmatch.userservice.dtos.UserCreateDTO;
-import com.dmatch.userservice.reponses.InternalUserResponse;
-import com.dmatch.userservice.reponses.UserResponse;
+import com.dmatch.userservice.dtos.InternalUserResponse;
+import com.dmatch.userservice.dtos.UserResponse;
 
 import java.util.List;
 

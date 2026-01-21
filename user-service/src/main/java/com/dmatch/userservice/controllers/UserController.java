@@ -1,6 +1,6 @@
 package com.dmatch.userservice.controllers;
 
-import com.dmatch.userservice.reponses.UserResponse;
+import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

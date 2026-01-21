@@ -1,9 +1,8 @@
 package com.dmatch.userservice.controllers;
 
-import com.dmatch.userservice.commons.ApiResponse;
 import com.dmatch.userservice.dtos.UserCreateDTO;
-import com.dmatch.userservice.reponses.InternalUserResponse;
-import com.dmatch.userservice.reponses.UserResponse;
+import com.dmatch.userservice.dtos.InternalUserResponse;
+import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +16,10 @@ public class InternalUserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+    public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody UserCreateDTO userCreateDTO
     ) {
-        UserResponse userResponse = userService.createUser(userCreateDTO);
-        return ResponseEntity.ok().body(ApiResponse.<UserResponse>builder()
-                .message("User Created")
-                .data(userResponse)
-                .build()
-        );
+        return ResponseEntity.ok(userService.createUser(userCreateDTO));
     }
 
     @GetMapping("/by-email")
