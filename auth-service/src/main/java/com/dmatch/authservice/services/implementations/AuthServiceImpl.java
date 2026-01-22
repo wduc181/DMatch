@@ -19,14 +19,14 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse register(AuthRegisterRequest request) {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        UserCreateDTO userCreateDTO = UserCreateDTO.builder()
+        UserCreateRequest userCreateRequest = UserCreateRequest.builder()
                 .email(request.getEmail())
                 .password(encodedPassword)
                 .fullName(request.getFullName())
                 .role("USER")
                 .build();
 
-        return userClient.createUser(userCreateDTO).getBody();
+        return userClient.createUser(userCreateRequest).getBody();
     }
 
     @Override

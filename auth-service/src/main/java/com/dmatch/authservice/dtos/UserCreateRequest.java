@@ -9,7 +9,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class UserCreateDTO {
+public class UserCreateRequest {
     private String email;
 
     private String password;

@@ -2,7 +2,7 @@ package com.dmatch.userservice.services.implementations;
 
 import com.dmatch.userservice.commons.RoleName;
 import com.dmatch.userservice.commons.UserStatus;
-import com.dmatch.userservice.dtos.UserCreateDTO;
+import com.dmatch.userservice.dtos.UserCreateRequest;
 import com.dmatch.userservice.entities.Role;
 import com.dmatch.userservice.entities.User;
 import com.dmatch.userservice.exceptions.DataNotFoundException;
@@ -31,8 +31,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse createUser(UserCreateDTO userCreateDTO) {
-        String email = userCreateDTO.getEmail();
+    public UserResponse createUser(UserCreateRequest userCreateRequest) {
+        String email = userCreateRequest.getEmail();
 
         if (userRepository.existsByEmail(email)) {
             throw new InvalidBodyException("Email already exists");
@@ -43,9 +43,9 @@ public class UserServiceImpl implements UserService {
         roles.add(role);
 
         User user = User.builder()
-                .email(userCreateDTO.getEmail())
-                .password(userCreateDTO.getPassword()) // Password đã hash
-                .fullName(userCreateDTO.getFullName())
+                .email(userCreateRequest.getEmail())
+                .password(userCreateRequest.getPassword()) // Password đã hash
+                .fullName(userCreateRequest.getFullName())
                 .status(UserStatus.ACTIVE)
                 .roles(roles)
                 .build();
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse changeUserStatus(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new DataNotFoundException("User not found with id: " + id));
 
         if (UserStatus.ACTIVE.equals(user.getStatus())) {
             user.setStatus(UserStatus.BANNED);
@@ -104,5 +104,21 @@ public class UserServiceImpl implements UserService {
         }
         User updatedUser = userRepository.save(user);
         return UserResponse.fromUser(updatedUser);
+    }
+
+    @Override
+    public UserResponse addCompanyRoleToUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("User not found with id: " + id));
+        if (!UserStatus.ACTIVE.equals(user.getStatus())) {
+            throw new PermissionDeniedException("User is not active");
+        }
+        Set<Role> roles = user.getRoles();
+        Role companyRole = roleRepository.findByName(RoleName.COMPANY.name())
+                .orElseThrow(() -> new DataNotFoundException("Default role COMPANY not found in Database"));
+        roles.add(companyRole);
+        user.setRoles(roles);
+        userRepository.save(user);
+        return UserResponse.fromUser(user);
     }
 }

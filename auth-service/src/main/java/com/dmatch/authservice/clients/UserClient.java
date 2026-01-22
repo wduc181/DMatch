@@ -1,6 +1,6 @@
 package com.dmatch.authservice.clients;
 
-import com.dmatch.authservice.dtos.UserCreateDTO;
+import com.dmatch.authservice.dtos.UserCreateRequest;
 import com.dmatch.authservice.dtos.UserResponse;
 import com.dmatch.authservice.dtos.InternalUserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -15,7 +15,7 @@ public interface UserClient {
 
     @PostMapping
     ResponseEntity<UserResponse> createUser(
-            @RequestBody UserCreateDTO userCreateDTO
+            @RequestBody UserCreateRequest userCreateRequest
     );
 
     @GetMapping("/by-email")

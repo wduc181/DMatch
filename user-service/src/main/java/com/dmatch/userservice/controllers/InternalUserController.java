@@ -1,6 +1,6 @@
 package com.dmatch.userservice.controllers;
 
-import com.dmatch.userservice.dtos.UserCreateDTO;
+import com.dmatch.userservice.dtos.UserCreateRequest;
 import com.dmatch.userservice.dtos.InternalUserResponse;
 import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
@@ -17,9 +17,9 @@ public class InternalUserController {
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(
-            @Valid @RequestBody UserCreateDTO userCreateDTO
+            @Valid @RequestBody UserCreateRequest userCreateRequest
     ) {
-        return ResponseEntity.ok(userService.createUser(userCreateDTO));
+        return ResponseEntity.ok(userService.createUser(userCreateRequest));
     }
 
     @GetMapping("/by-email")
@@ -34,5 +34,12 @@ public class InternalUserController {
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @PostMapping("/{id}/company")
+    public ResponseEntity<UserResponse> addCompanyRoleToUser(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(userService.addCompanyRoleToUser(id));
     }
 }
