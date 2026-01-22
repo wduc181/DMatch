@@ -1,0 +1,13 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: company-service
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+  profiles:
+    active: default
+
+jwt:
+  secret: ${JWT_SECRET}

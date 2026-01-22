@@ -15,6 +15,10 @@ spring:
           enabled: false
           lower-case-service-id: false
       routes:
+        - id: company-service
+          uri: lb://COMPANY-SERVICE
+          predicates:
+            - Path=/api/v1/companies/**, /internal/companies/**
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
