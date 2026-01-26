@@ -1,5 +1,6 @@
 package com.dmatch.userservice.controllers;
 
+import com.dmatch.userservice.commons.ApiResponse;
 import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +18,15 @@ public class UserController {
 
     @GetMapping("/users/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
-        return ResponseEntity.ok(userService.getCurrentUser()); // To do: After done auth service zzz
+        return ResponseEntity.ok(userService.getCurrentUser());
     }
 
     @GetMapping("/admin/users")
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<ApiResponse<?>> getAllUsers() {
+        return ResponseEntity.ok().body(ApiResponse.builder()
+                .message("Got all users")
+                .data(userService.getAllUsers())
+                .build());
     }
 
     @PutMapping("/admin/users/{id}/status")

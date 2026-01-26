@@ -121,4 +121,20 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return UserResponse.fromUser(user);
     }
+
+    @Override
+    public UserResponse deleteCompanyRoleToUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("User not found with id: " + id));
+        if (!UserStatus.ACTIVE.equals(user.getStatus())) {
+            throw new PermissionDeniedException("User is not active");
+        }
+        Set<Role> roles = user.getRoles();
+        Role companyRole = roleRepository.findByName(RoleName.COMPANY.name())
+                .orElseThrow(() -> new DataNotFoundException("Default role COMPANY not found in Database"));
+        roles.remove(companyRole);
+        user.setRoles(roles);
+        userRepository.save(user);
+        return UserResponse.fromUser(user);
+    }
 }

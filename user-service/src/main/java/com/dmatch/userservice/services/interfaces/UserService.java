@@ -14,4 +14,5 @@ public interface    UserService {
     List<UserResponse> getAllUsers();
     UserResponse changeUserStatus(Long id);
     UserResponse addCompanyRoleToUser(Long userId);
+    UserResponse deleteCompanyRoleToUser(Long userId);
 }

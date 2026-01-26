@@ -42,4 +42,11 @@ public class InternalUserController {
     ) {
         return ResponseEntity.ok(userService.addCompanyRoleToUser(id));
     }
+
+    @DeleteMapping("/{id}/company")
+    public ResponseEntity<UserResponse> deleteCompanyRoleToUser(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(userService.deleteCompanyRoleToUser(id));
+    }
 }
