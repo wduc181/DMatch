@@ -1,5 +1,6 @@
 package com.dmatch.authservice.controllers;
 
+import com.dmatch.authservice.commons.ApiResponse;
 import com.dmatch.authservice.dtos.AuthLoginRequest;
 import com.dmatch.authservice.dtos.AuthResponse;
 import com.dmatch.authservice.dtos.AuthRegisterRequest;
@@ -20,16 +21,24 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(
+    public ResponseEntity<ApiResponse<UserResponse>> register(
             @RequestBody AuthRegisterRequest request
     ) {
-        return ResponseEntity.ok(authService.register(request));
+        UserResponse user = authService.register(request);
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .message("Registered successfully")
+                .data(user)
+                .build());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
+    public ResponseEntity<ApiResponse<AuthResponse>> login(
             @RequestBody AuthLoginRequest request
     ) {
-        return ResponseEntity.ok(authService.login(request));
+        AuthResponse auth = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
+                .message("Logged in successfully")
+                .data(auth)
+                .build());
     }
 }
