@@ -1,5 +1,6 @@
 package com.dmatch.authservice.clients;
 
+import com.dmatch.authservice.commons.ApiResponse;
 import com.dmatch.authservice.dtos.UserCreateRequest;
 import com.dmatch.authservice.dtos.UserResponse;
 import com.dmatch.authservice.dtos.InternalUserResponse;
@@ -14,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface UserClient {
 
     @PostMapping
-    ResponseEntity<UserResponse> createUser(
+        ResponseEntity<ApiResponse<UserResponse>> createUser(
             @RequestBody UserCreateRequest userCreateRequest
     );
 
     @GetMapping("/by-email")
-    ResponseEntity<InternalUserResponse> getUserByEmail(
+        ResponseEntity<ApiResponse<InternalUserResponse>> getUserByEmail(
             @RequestParam("email") String email
     );
 }

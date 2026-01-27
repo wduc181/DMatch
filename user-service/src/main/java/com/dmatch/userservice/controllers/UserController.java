@@ -17,22 +17,30 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/users/me")
-    public ResponseEntity<UserResponse> getCurrentUser() {
-        return ResponseEntity.ok(userService.getCurrentUser());
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
+        UserResponse user = userService.getCurrentUser();
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .message("Got current user")
+                .data(user)
+                .build());
     }
 
     @GetMapping("/admin/users")
-    public ResponseEntity<ApiResponse<?>> getAllUsers() {
-        return ResponseEntity.ok().body(ApiResponse.builder()
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
+        return ResponseEntity.ok().body(ApiResponse.<List<UserResponse>>builder()
                 .message("Got all users")
                 .data(userService.getAllUsers())
                 .build());
     }
 
     @PutMapping("/admin/users/{id}/status")
-    public ResponseEntity<UserResponse> changeUserStatus(
+    public ResponseEntity<ApiResponse<UserResponse>> changeUserStatus(
             @PathVariable Long id
     ) {
-        return ResponseEntity.ok(userService.changeUserStatus(id));
+        UserResponse user = userService.changeUserStatus(id);
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .message("Updated user status")
+                .data(user)
+                .build());
     }
 }
