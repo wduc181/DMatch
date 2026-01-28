@@ -7,9 +7,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="api-gateway" />
+        <module name="job-service" />
         <module name="config-server" />
         <module name="auth-service" />
+        <module name="api-gateway" />
         <module name="user-service" />
         <module name="company-service" />
         <module name="discovery-service" />
@@ -23,6 +24,7 @@
       <module name="company-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="discovery-service" options="-parameters" />
+      <module name="job-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>
