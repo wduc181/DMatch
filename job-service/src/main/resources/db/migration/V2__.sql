@@ -1,0 +1,31 @@
+INSERT INTO job_levels (code, name) VALUES
+	('INTERN', 'Internship'),
+	('FRESHER', 'Fresher'),
+	('JUNIOR', 'Junior'),
+	('MID', 'Mid-level'),
+	('SENIOR', 'Senior'),
+	('LEAD', 'Lead'),
+	('MANAGER', 'Manager'),
+	('DIRECTOR', 'Director');
+
+INSERT INTO job_categories (code, name) VALUES
+	('IT_SOFTWARE', 'IT - Software Development'),
+	('IT_QA', 'IT - QA/Testing'),
+	('IT_DEVOPS', 'IT - DevOps/Infrastructure'),
+	('IT_DATA', 'IT - Data/AI'),
+	('PRODUCT', 'Product Management'),
+	('PROJECT_PM', 'Project Management'),
+	('DESIGN_UI_UX', 'Design - UI/UX'),
+	('SALES', 'Sales'),
+	('MARKETING', 'Marketing'),
+	('HR', 'Human Resources'),
+	('FINANCE', 'Finance/Accounting'),
+	('CUSTOMER_SERVICE', 'Customer Service'),
+	('OPERATIONS', 'Operations'),
+	('LEGAL', 'Legal/Compliance'),
+	('EDUCATION', 'Education/Training'),
+	('HEALTHCARE', 'Healthcare'),
+	('LOGISTICS', 'Logistics/Supply Chain'),
+	('MANUFACTURING', 'Manufacturing/Production'),
+	('HOSPITALITY', 'Hospitality/Tourism'),
+	('RETAIL', 'Retail');
