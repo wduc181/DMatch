@@ -77,6 +77,7 @@ Config Server runs on **port 8888** using **native config** at `classpath:/confi
 ## 4. API Gateway Routes
 
 Gateway runs on **port 8081**. Current routes:
+- `/api/v1/jobs/**`, `/internal/companies/**` → JOB-SERVICE
 - `/api/v1/companies/**`, `/internal/companies/**` → COMPANY-SERVICE
 - `/api/v1/auth/**` → AUTH-SERVICE
 - `/internal/users/**`, `/api/v1/users/**`, `/api/v1/admin/users/**` → USER-SERVICE
@@ -91,6 +92,7 @@ Gateway runs on **port 8081**. Current routes:
 - auth-service: `0` (random port)
 - user-service: `0` (random port)
 - company-service: `0` (random port)
+- job-service: `0` (random port)
 
 ---
 
@@ -105,7 +107,7 @@ Gateway runs on **port 8081**. Current routes:
 - [x] Implement User Service CRUD
 - [x] Implement Auth Service with JWT authentication and authorization (auth-service)
 - [x] Implement Company Service (CRUD)
-- [ ] Implement Job Service (CRUD, companyId)
+- [x] Implement Job Service (CRUD, companyId)
 - [ ] Implement Review Service (Rating, Comment)
 - [ ] Add Auth: JWT filter
 - [ ] Dockerize all services
