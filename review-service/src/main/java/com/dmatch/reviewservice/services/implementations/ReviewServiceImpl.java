@@ -4,6 +4,7 @@ import com.dmatch.reviewservice.clients.CompanyServiceClient;
 import com.dmatch.reviewservice.clients.JobServiceClient;
 import com.dmatch.reviewservice.clients.UserServiceClient;
 import com.dmatch.reviewservice.commons.ApiResponse;
+import com.dmatch.reviewservice.commons.ReviewStatus;
 import com.dmatch.reviewservice.dtos.CompanySummaryResponse;
 import com.dmatch.reviewservice.dtos.JobSummaryResponse;
 import com.dmatch.reviewservice.dtos.ReviewCreateRequest;
@@ -33,8 +34,6 @@ import java.util.Locale;
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
-
-	private static final String STATUS_ACTIVE = "ACTIVE";
 
 	private final ReviewRepository reviewRepository;
 	private final CompanyServiceClient companyServiceClient;
@@ -67,7 +66,7 @@ public class ReviewServiceImpl implements ReviewService {
 				.jobId(request.getJobId())
 				.rating(request.getRating() == null ? null : request.getRating().shortValue())
 				.comment(request.getComment())
-				.status(STATUS_ACTIVE)
+				.status(ReviewStatus.ACTIVE.name())
 				.build();
 
 		Review saved = reviewRepository.save(review);
@@ -102,6 +101,7 @@ public class ReviewServiceImpl implements ReviewService {
 		if (request.getComment() != null) {
 			review.setComment(request.getComment());
 		}
+		review.setStatus(ReviewStatus.CHANGED.name());
 
 		Review saved = reviewRepository.save(review);
 		return toResponse(saved);
@@ -132,8 +132,8 @@ public class ReviewServiceImpl implements ReviewService {
 
 		if (companyId != null) {
 			validateCompanyExists(companyId);
-			Double avg = reviewRepository.getAverageRatingByCompanyIdAndStatus(companyId, STATUS_ACTIVE);
-			long total = reviewRepository.countByCompanyIdAndStatus(companyId, STATUS_ACTIVE);
+			Double avg = reviewRepository.getAverageRatingByCompanyIdAndStatus(companyId, ReviewStatus.ACTIVE.name());
+			long total = reviewRepository.countByCompanyIdAndStatus(companyId, ReviewStatus.ACTIVE.name());
 			return ReviewSummaryResponse.builder()
 					.companyId(companyId)
 					.averageRating(avg == null ? 0.0 : avg)
@@ -142,8 +142,8 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 
 		validateJobExists(jobId);
-		Double avg = reviewRepository.getAverageRatingByJobIdAndStatus(jobId, STATUS_ACTIVE);
-		long total = reviewRepository.countByJobIdAndStatus(jobId, STATUS_ACTIVE);
+		Double avg = reviewRepository.getAverageRatingByJobIdAndStatus(jobId, ReviewStatus.ACTIVE.name());
+		long total = reviewRepository.countByJobIdAndStatus(jobId, ReviewStatus.ACTIVE.name());
 		return ReviewSummaryResponse.builder()
 				.jobId(jobId)
 				.averageRating(avg == null ? 0.0 : avg)
