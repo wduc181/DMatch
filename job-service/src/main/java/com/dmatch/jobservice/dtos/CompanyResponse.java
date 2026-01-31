@@ -1,5 +1,6 @@
 package com.dmatch.jobservice.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -10,4 +11,8 @@ public class CompanyResponse {
 
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("owner_id")
+    @JsonAlias({"ownerId"})
+    private Long ownerId;
 }

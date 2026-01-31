@@ -7,6 +7,8 @@ import com.dmatch.jobservice.entities.JobLevel;
 import com.dmatch.jobservice.exceptions.DataNotFoundException;
 import com.dmatch.jobservice.exceptions.InvalidBodyException;
 import com.dmatch.jobservice.exceptions.InvalidParamException;
+import com.dmatch.jobservice.exceptions.PermissionDeniedException;
+import com.dmatch.jobservice.clients.UserClient;
 import com.dmatch.jobservice.clients.CompanyClient;
 import com.dmatch.jobservice.commons.ApiResponse;
 import com.dmatch.jobservice.repositories.JobCategoryRepository;
@@ -19,6 +21,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +38,7 @@ public class JobServiceImpl implements JobService {
     private final JobLevelRepository jobLevelRepository;
     private final JobCategoryRepository jobCategoryRepository;
     private final CompanyClient companyClient;
+    private final UserClient userClient;
 
     @Override
     @Transactional
@@ -41,14 +47,7 @@ public class JobServiceImpl implements JobService {
             throw new InvalidParamException("company_id is required");
         }
 
-        try {
-            ApiResponse<CompanyResponse> companyResponse = companyClient.getCompanyById(companyId).getBody();
-            if (companyResponse == null || companyResponse.getData() == null) {
-                throw new DataNotFoundException("Company not found with id: " + companyId);
-            }
-        } catch (FeignException e) {
-            throw new DataNotFoundException("Company not found with id: " + companyId);
-        }
+        validateCompanyOwnership(companyId);
 
         if (jobRepository.existsByCompanyIdAndTitleIgnoreCase(companyId, request.getTitle())) {
             throw new InvalidBodyException("Job title already exists for this company");
@@ -88,8 +87,13 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional
     public JobResponse updateJob(Long jobId, JobUpdateRequest request, Long companyId) {
+        if (companyId == null) {
+            throw new InvalidParamException("company_id is required");
+        }
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
+
+        validateJobOwnership(job, companyId);
 
         if (request.getTitle() != null) {
             job.setTitle(request.getTitle());
@@ -226,8 +230,12 @@ public class JobServiceImpl implements JobService {
         if (status == null || status.isBlank()) {
             throw new InvalidParamException("status is required");
         }
+        if (companyId == null) {
+            throw new InvalidParamException("company_id is required");
+        }
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
+        validateJobOwnership(job, companyId);
         job.setStatus(status);
         Job saved = jobRepository.save(job);
         return JobResponse.fromJob(saved);
@@ -236,8 +244,12 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional
     public JobResponse setJobLevel(Long jobId, Long jobLevelId, Long companyId) {
+        if (companyId == null) {
+            throw new InvalidParamException("company_id is required");
+        }
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
+        validateJobOwnership(job, companyId);
         JobLevel jobLevel = jobLevelRepository.findById(jobLevelId)
                 .orElseThrow(() -> new DataNotFoundException("Job level not found"));
         job.setJobLevel(jobLevel);
@@ -248,8 +260,12 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional
     public JobResponse setJobCategories(Long jobId, List<Long> categoryIds, Long companyId) {
+        if (companyId == null) {
+            throw new InvalidParamException("company_id is required");
+        }
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
+        validateJobOwnership(job, companyId);
 
         if (categoryIds == null || categoryIds.isEmpty()) {
             job.setCategories(Set.of());
@@ -269,9 +285,73 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional
     public void deleteJob(Long jobId, Long companyId) {
+        if (companyId == null) {
+            throw new InvalidParamException("company_id is required");
+        }
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
+        validateJobOwnership(job, companyId);
         jobRepository.delete(job);
+    }
+
+    private void validateJobOwnership(Job job, Long companyId) {
+        if (job.getCompanyId() == null || !job.getCompanyId().equals(companyId)) {
+            throw new InvalidParamException("company_id does not match job owner");
+        }
+        validateCompanyOwnership(companyId);
+    }
+
+    private void validateCompanyOwnership(Long companyId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new PermissionDeniedException("Unauthenticated");
+        }
+
+        CompanyResponse company = getCompanyByIdOrThrow(companyId);
+
+        if (isAdmin(authentication)) {
+            return;
+        }
+
+        String email = authentication.getName();
+        if (email == null || email.isBlank()) {
+            throw new PermissionDeniedException("Invalid authentication subject");
+        }
+
+        InternalUserResponse user = getUserByEmailOrThrow(email);
+        if (company.getOwnerId() == null || user.getId() == null || !company.getOwnerId().equals(user.getId())) {
+            throw new PermissionDeniedException("You are not the owner of this company");
+        }
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+    }
+
+    private CompanyResponse getCompanyByIdOrThrow(Long companyId) {
+        try {
+            ApiResponse<CompanyResponse> companyResponse = companyClient.getCompanyById(companyId).getBody();
+            if (companyResponse == null || companyResponse.getData() == null) {
+                throw new DataNotFoundException("Company not found with id: " + companyId);
+            }
+            return companyResponse.getData();
+        } catch (FeignException e) {
+            throw new DataNotFoundException("Company not found with id: " + companyId);
+        }
+    }
+
+    private InternalUserResponse getUserByEmailOrThrow(String email) {
+        try {
+            ApiResponse<InternalUserResponse> userResponse = userClient.getUserByEmail(email).getBody();
+            if (userResponse == null || userResponse.getData() == null) {
+                throw new DataNotFoundException("User not found with email: " + email);
+            }
+            return userResponse.getData();
+        } catch (FeignException e) {
+            throw new DataNotFoundException("User not found with email: " + email);
+        }
     }
 
     @Override

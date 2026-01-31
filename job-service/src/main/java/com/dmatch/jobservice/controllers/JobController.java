@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class JobController {
     private final JobService jobService;
 
     @PostMapping("/jobs")
+	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> createJob(
 	    @RequestParam("company_id") Long companyId,
 	    @Valid @RequestBody JobCreateRequest request
@@ -32,6 +34,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}")
+	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> updateJob(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -46,6 +49,7 @@ public class JobController {
     }
 
     @GetMapping("/jobs/{id}")
+	@PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<JobResponse>> getJobById(
 	    @PathVariable Long id
     ) {
@@ -58,6 +62,7 @@ public class JobController {
     }
 
     @GetMapping("/jobs")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<Page<JobResponse>>> getJobs(
 	    @RequestParam(value = "keyword", required = false) String keyword,
 	    @RequestParam(value = "location", required = false) String location,
@@ -91,6 +96,7 @@ public class JobController {
     }
 
 	@GetMapping("/jobs/by-company/{companyId}")
+	@PreAuthorize("permitAll()")
 	public ResponseEntity<ApiResponse<Page<JobResponse>>> getJobsByCompany(
 			@PathVariable Long companyId,
 			@RequestParam(value = "page", defaultValue = "1") int page,
@@ -104,6 +110,7 @@ public class JobController {
 	}
 
     @PutMapping("/jobs/{id}/status")
+	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> changeJobStatus(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -118,6 +125,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}/level")
+	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> setJobLevel(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -132,6 +140,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}/categories")
+	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> setJobCategories(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -146,6 +155,7 @@ public class JobController {
     }
 
     @DeleteMapping("/jobs/{id}")
+	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId
@@ -159,6 +169,7 @@ public class JobController {
     }
 
     @GetMapping("/jobs/levels")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<List<JobLevelResponse>>> getJobLevels() {
 		return ResponseEntity.ok(ApiResponse.<List<JobLevelResponse>>builder()
 				.message("Got job levels")
@@ -168,6 +179,7 @@ public class JobController {
     }
 
     @GetMapping("/jobs/categories")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<List<JobCategoryResponse>>> getJobCategories() {
 		return ResponseEntity.ok(ApiResponse.<List<JobCategoryResponse>>builder()
 				.message("Got job categories")
