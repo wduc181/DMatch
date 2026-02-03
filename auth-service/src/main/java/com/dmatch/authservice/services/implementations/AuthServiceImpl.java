@@ -3,6 +3,7 @@ package com.dmatch.authservice.services.implementations;
 import com.dmatch.authservice.clients.UserClient;
 import com.dmatch.authservice.commons.ApiResponse;
 import com.dmatch.authservice.dtos.*;
+import com.dmatch.authservice.exceptions.PermissionDeniedException;
 import com.dmatch.authservice.services.interfaces.AuthService;
 import com.dmatch.authservice.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -40,11 +41,14 @@ public class AuthServiceImpl implements AuthService {
         InternalUserResponse user = response == null ? null : response.getData();
 
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
+            throw new PermissionDeniedException("Invalid username or password");
         }
 
-        String role = user.getRoles().isEmpty() ? "USER" : user.getRoles().get(0);
-        String token = jwtUtil.generateToken(user.getEmail(), role);
+        var roles = user.getRoles();
+        if (roles == null || roles.isEmpty()) {
+            roles = java.util.List.of("USER");
+        }
+        String token = jwtUtil.generateToken(user.getEmail(), roles);
 
         return AuthResponse.builder()
                 .accessToken(token)
