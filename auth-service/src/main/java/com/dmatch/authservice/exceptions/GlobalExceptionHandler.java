@@ -41,6 +41,14 @@ public class GlobalExceptionHandler {
                 .build()
         );
     }
+    @ExceptionHandler({PermissionDeniedException.class})
+    public ResponseEntity<ApiResponse<?>> handlePermissionDeny(PermissionDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()
+                .message(e.getMessage())
+                .data(null)
+                .build()
+        );
+    }
 
     @ExceptionHandler({AccessDeniedException.class})
     public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException e) {
