@@ -4,6 +4,8 @@ import com.dmatch.companyservice.commons.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -43,6 +45,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler({PermissionDeniedException.class})
+    public ResponseEntity<ApiResponse<?>> handlePermissionException(Exception e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()
+                .message(e.getMessage())
+                .data(null)
+                .build()
+        );
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
         List<String> errorMessages = e.getBindingResult().getFieldErrors()
@@ -52,6 +63,24 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(ApiResponse.builder()
                 .message(String.join(", ", errorMessages))
+                .data(null)
+                .build()
+        );
+    }
+
+    @ExceptionHandler({AccessDeniedException.class})
+    public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()
+                .message("Forbidden")
+                .data(null)
+                .build()
+        );
+    }
+
+    @ExceptionHandler({AuthenticationException.class})
+    public ResponseEntity<ApiResponse<?>> handleAuthentication(AuthenticationException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.builder()
+                .message("Unauthorized")
                 .data(null)
                 .build()
         );

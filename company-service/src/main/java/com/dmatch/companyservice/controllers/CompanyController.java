@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +20,7 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @GetMapping
+        @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<Page<CompanyResponse>>> getAllCompanies(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
@@ -32,6 +34,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
+        @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(
             @PathVariable Long id
     ) {
@@ -44,6 +47,7 @@ public class CompanyController {
     }
 
         @PostMapping
+        @PreAuthorize("hasAnyRole('USER','ADMIN')")
         public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(
             @Valid @RequestBody CompanyCreateRequest request
         ) {
@@ -56,6 +60,7 @@ public class CompanyController {
         }
 
         @GetMapping("/by-owner/{ownerId}")
+        @PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
         public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyByOwnerId(
             @PathVariable Long ownerId
         ) {
@@ -68,6 +73,7 @@ public class CompanyController {
         }
 
         @PutMapping("/by-owner/{ownerId}")
+        @PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
         public ResponseEntity<ApiResponse<CompanyResponse>> updateCompanyByOwnerId(
             @PathVariable Long ownerId,
             @Valid @RequestBody CompanyUpdateRequest request
@@ -81,6 +87,7 @@ public class CompanyController {
         }
 
         @DeleteMapping("/by-owner/{ownerId}")
+        @PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
         public ResponseEntity<ApiResponse<Void>> deleteCompanyByOwnerId(
             @PathVariable Long ownerId
         ) {
