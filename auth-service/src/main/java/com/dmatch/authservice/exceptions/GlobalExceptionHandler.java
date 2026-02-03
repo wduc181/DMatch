@@ -1,6 +1,6 @@
-package com.dmatch.reviewservice.exceptions;
+package com.dmatch.authservice.exceptions;
 
-import com.dmatch.reviewservice.commons.ApiResponse;
+import com.dmatch.authservice.commons.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,28 +28,15 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler({DataNotFoundException.class})
-    public ResponseEntity<ApiResponse<?>> handleNotFoundException(Exception e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.builder()
-                .message(e.getMessage())
-                .data(null)
-                .build()
-        );
-    }
+    @ExceptionHandler({MethodArgumentNotValidException.class})
+    public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
+        List<String> errorMessages = e.getBindingResult().getFieldErrors()
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .toList();
 
-    @ExceptionHandler({InvalidBodyException.class, InvalidParamException.class})
-    public ResponseEntity<ApiResponse<?>> handleBadRequestException(Exception e) {
         return ResponseEntity.badRequest().body(ApiResponse.builder()
-                .message(e.getMessage())
-                .data(null)
-                .build()
-        );
-    }
-
-    @ExceptionHandler({PermissionDeniedException.class})
-    public ResponseEntity<ApiResponse<?>> handlePermissionException(Exception e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()
-                .message(e.getMessage())
+                .message(String.join(", ", errorMessages))
                 .data(null)
                 .build()
         );
@@ -68,20 +55,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleAuthentication(AuthenticationException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.builder()
                 .message("Unauthorized")
-                .data(null)
-                .build()
-        );
-    }
-
-    @ExceptionHandler({MethodArgumentNotValidException.class})
-    public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
-        List<String> errorMessages = e.getBindingResult().getFieldErrors()
-                .stream()
-                .map(FieldError::getDefaultMessage)
-                .toList();
-
-        return ResponseEntity.badRequest().body(ApiResponse.builder()
-                .message(String.join(", ", errorMessages))
                 .data(null)
                 .build()
         );

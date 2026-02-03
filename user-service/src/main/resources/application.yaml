@@ -13,3 +13,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8111/eureka
+
+jwt:
+  secret: ${JWT_SECRET}
