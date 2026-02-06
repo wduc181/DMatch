@@ -18,6 +18,7 @@ import com.dmatch.reviewservice.entities.Review;
 import com.dmatch.reviewservice.exceptions.DataNotFoundException;
 import com.dmatch.reviewservice.exceptions.InvalidBodyException;
 import com.dmatch.reviewservice.exceptions.InvalidParamException;
+import com.dmatch.reviewservice.exceptions.PermissionDeniedException;
 import com.dmatch.reviewservice.repositories.ReviewRepository;
 import com.dmatch.reviewservice.services.interfaces.ReviewService;
 import jakarta.transaction.Transactional;
@@ -27,6 +28,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
@@ -45,6 +49,7 @@ public class ReviewServiceImpl implements ReviewService {
 	public ReviewResponse createReview(ReviewCreateRequest request) {
 		validateTarget(request.getCompanyId(), request.getJobId());
 		validateUserExists(request.getUserId());
+		validateOwnerAccess(request.getUserId());
 
 		if (request.getCompanyId() != null) {
 			validateCompanyExists(request.getCompanyId());
@@ -94,6 +99,8 @@ public class ReviewServiceImpl implements ReviewService {
 		Review review = reviewRepository.findById(id)
 				.orElseThrow(() -> new DataNotFoundException("Review not found"));
 
+		validateOwnerAccess(review.getUserId());
+
 		if (request.getRating() != null) {
 			review.setRating(request.getRating().shortValue());
 		}
@@ -123,6 +130,9 @@ public class ReviewServiceImpl implements ReviewService {
 	public void deleteReview(Long id) {
 		Review review = reviewRepository.findById(id)
 				.orElseThrow(() -> new DataNotFoundException("Review not found"));
+
+		validateOwnerAccess(review.getUserId());
+
 		reviewRepository.delete(review);
 	}
 
@@ -272,6 +282,37 @@ public class ReviewServiceImpl implements ReviewService {
 			}
 		} catch (Exception e) {
 			throw new DataNotFoundException("Job not found");
+		}
+	}
+
+	private void validateOwnerAccess(Long reviewOwnerId) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new PermissionDeniedException("User not authenticated");
+		}
+
+		boolean isAdmin = authentication.getAuthorities().stream()
+				.map(GrantedAuthority::getAuthority)
+				.anyMatch(role -> role.equals("ROLE_ADMIN"));
+		if (isAdmin) {
+			return;
+		}
+
+		String currentEmail = authentication.getName();
+		try {
+			ApiResponse<UserSummaryResponse> response = userServiceClient.getUserByEmail(currentEmail);
+			if (response == null || response.getData() == null) {
+				throw new PermissionDeniedException("Cannot verify user identity");
+			}
+
+			Long currentUserId = response.getData().getId();
+			if (!reviewOwnerId.equals(currentUserId)) {
+				throw new PermissionDeniedException("You don't have permission to access this review");
+			}
+		} catch (PermissionDeniedException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new PermissionDeniedException("Cannot verify user identity");
 		}
 	}
 }

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
 	    @Valid @RequestBody ReviewCreateRequest request
     ) {
@@ -77,6 +79,7 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(
 	    @PathVariable Long id,
 	    @Valid @RequestBody ReviewUpdateRequest request
@@ -90,6 +93,7 @@ public class ReviewController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ReviewResponse>> updateReviewStatus(
 	    @PathVariable Long id,
 	    @Valid @RequestBody ReviewStatusUpdateRequest request
@@ -103,6 +107,7 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
 	    @PathVariable Long id
     ) {

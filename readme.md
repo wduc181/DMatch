@@ -109,7 +109,7 @@ Gateway runs on **port 8081**. Current routes:
 - [x] Implement Company Service (CRUD)
 - [x] Implement Job Service (CRUD, companyId)
 - [x] Implement Review Service (Rating, Comment)
-- [ ] Add Auth: JWT filter
+- [x] Add Auth: JWT filter
 - [ ] Dockerize all services
 - [ ] Run full system with docker-compose
 

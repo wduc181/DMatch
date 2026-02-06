@@ -1,6 +1,7 @@
 package com.dmatch.companyservice.clients;
 
 import com.dmatch.companyservice.commons.ApiResponse;
+import com.dmatch.companyservice.dtos.InternalUserResponse;
 import com.dmatch.companyservice.dtos.UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,11 @@ public interface UserClient {
     @GetMapping("/{id}")
     ResponseEntity<ApiResponse<UserResponse>> getUserById(
             @PathVariable Long id
+    );
+
+    @GetMapping("/by-email")
+    ResponseEntity<ApiResponse<InternalUserResponse>> getUserByEmail(
+            @RequestParam String email
     );
 
     @PostMapping("/{id}/company")

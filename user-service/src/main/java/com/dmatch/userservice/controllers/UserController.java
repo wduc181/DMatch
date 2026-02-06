@@ -5,6 +5,7 @@ import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/users/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
         UserResponse user = userService.getCurrentUser();
         return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
@@ -26,6 +28,7 @@ public class UserController {
     }
 
     @GetMapping("/admin/users")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
         return ResponseEntity.ok().body(ApiResponse.<List<UserResponse>>builder()
                 .message("Got all users")
@@ -34,6 +37,7 @@ public class UserController {
     }
 
     @PutMapping("/admin/users/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> changeUserStatus(
             @PathVariable Long id
     ) {

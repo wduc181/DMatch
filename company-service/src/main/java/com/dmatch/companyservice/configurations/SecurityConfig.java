@@ -1,6 +1,6 @@
-package com.dmatch.userservice.configurations;
+package com.dmatch.companyservice.configurations;
 
-import com.dmatch.userservice.security.JwtAuthenticationFilter;
+import com.dmatch.companyservice.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +25,9 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(req -> req.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
