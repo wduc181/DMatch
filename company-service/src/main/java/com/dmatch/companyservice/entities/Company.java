@@ -30,8 +30,8 @@ public class Company {
 
     private String address;
 
-    @Column(name = "logo_url")
-    private String logoUrl;
+    @Column(name = "logo_key")
+    private String logoKey;
 
     private String website;
 

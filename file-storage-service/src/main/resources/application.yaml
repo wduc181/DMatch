@@ -1,0 +1,13 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: file-storage-service
+  config:
+    import: "optional:configserver:http://localhost:8888/"
+  profiles:
+    active: default
+
+jwt:
+  secret: ${JWT_SECRET}
