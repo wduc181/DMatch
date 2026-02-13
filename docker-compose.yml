@@ -208,6 +208,28 @@ services:
     networks:
       - dmatch-network
 
+  # ==================== 9. File Storage Service ====================
+
+  file-storage-service:
+    build:
+      context: ./file-storage-service
+      dockerfile: Dockerfile
+    container_name: dmatch-file-storage
+    environment:
+      SERVER_PORT: 8080
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8111/eureka
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: ${AWS_SECRET_KEY}
+      SPRING_CLOUD_AWS_REGION_STATIC: ${AWS_REGION}
+      SPRING_CLOUD_AWS_S3_BUCKET: ${AWS_BUCKET_NAME}
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - dmatch-network
+
 volumes:
   postgres_data:
 

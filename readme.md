@@ -151,7 +151,7 @@ Gateway runs on **port 8081**. Current routes:
 - OpenAPI / Swagger
 
 **Checklist**
-- [ ] Implement file-storage service 
+- [x] Implement file-storage service 
 - [ ] Timeout & fallback for API calls
 - [ ] Swagger for each service
 
