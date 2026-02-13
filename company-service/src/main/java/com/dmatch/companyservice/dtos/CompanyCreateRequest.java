@@ -21,7 +21,8 @@ public class CompanyCreateRequest {
 
     private String address;
 
-    private String logoUrl;
+    @JsonProperty("logo_key")
+    private String logoKey;
 
     private String website;
 

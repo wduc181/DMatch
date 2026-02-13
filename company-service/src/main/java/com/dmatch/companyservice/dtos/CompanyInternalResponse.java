@@ -12,7 +12,7 @@ import lombok.*;
 public class CompanyInternalResponse {
     private Long id;
     private String name;
-    private String logoUrl;
+    private String logoKey;
     private String address;
     private String website;
 
@@ -20,7 +20,7 @@ public class CompanyInternalResponse {
         return CompanyInternalResponse.builder()
                 .id(company.getId())
                 .name(company.getName())
-                .logoUrl(company.getLogoUrl())
+                .logoKey(company.getLogoKey())
                 .address(company.getAddress())
                 .website(company.getWebsite())
                 .build();

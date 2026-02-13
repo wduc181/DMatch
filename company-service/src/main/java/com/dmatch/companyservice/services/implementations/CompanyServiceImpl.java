@@ -1,5 +1,6 @@
 package com.dmatch.companyservice.services.implementations;
 
+import com.dmatch.companyservice.clients.FileStorageClient;
 import com.dmatch.companyservice.clients.UserClient;
 import com.dmatch.companyservice.dtos.CompanyCreateRequest;
 import com.dmatch.companyservice.dtos.CompanyResponse;
@@ -13,6 +14,7 @@ import com.dmatch.companyservice.repositories.CompanyRepository;
 import com.dmatch.companyservice.services.interfaces.CompanyService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final UserClient userClient;
+    private final FileStorageClient fileStorageClient;
 
     @Override
     @Transactional
@@ -45,7 +49,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .address(request.getAddress())
-                .logoUrl(request.getLogoUrl())
+                .logoKey(request.getLogoKey())
                 .website(request.getWebsite())
                 .employeeSize(request.getEmployeeSize())
                 .ownerId(ownerId)
@@ -69,9 +73,16 @@ public class CompanyServiceImpl implements CompanyService {
         company.setName(request.getName());
         company.setDescription(request.getDescription());
         company.setAddress(request.getAddress());
-        company.setLogoUrl(request.getLogoUrl());
         company.setWebsite(request.getWebsite());
         company.setEmployeeSize(request.getEmployeeSize());
+
+        String oldLogoKey = company.getLogoKey();
+        String newLogoKey = request.getLogoKey();
+        if (oldLogoKey != null && !oldLogoKey.isBlank()
+                && (newLogoKey == null || !oldLogoKey.equals(newLogoKey))) {
+            deleteFileQuietly(oldLogoKey);
+        }
+        company.setLogoKey(newLogoKey);
 
         companyRepository.save(company);
 
@@ -118,6 +129,11 @@ public class CompanyServiceImpl implements CompanyService {
         validateOwnerAccess(ownerId);
         Company company = companyRepository.findByOwnerId(ownerId)
                 .orElseThrow(() -> new DataNotFoundException("Company not found"));
+
+        if (company.getLogoKey() != null && !company.getLogoKey().isBlank()) {
+            deleteFileQuietly(company.getLogoKey());
+        }
+
         companyRepository.delete(company);
         userClient.deleteCompanyRoleToUser(ownerId);
     }
@@ -158,6 +174,16 @@ public class CompanyServiceImpl implements CompanyService {
             return userResponse.getData();
         } catch (FeignException e) {
             throw new DataNotFoundException("User not found with email: " + email);
+        }
+    }
+
+     //Catch exception để không ảnh hưởng flow chính khi file-storage-service không khả dụng.
+    private void deleteFileQuietly(String fileKey) {
+        try {
+            fileStorageClient.deleteFile(fileKey);
+        } catch (Exception e) {
+            // Log warning nhưng không throw
+            log.warn("Failed to delete file '{}' from storage: {}", fileKey, e.getMessage());
         }
     }
 }
