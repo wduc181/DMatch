@@ -125,7 +125,7 @@ Gateway runs on **port 8081**. Current routes:
 - company-service: `0` (random port)
 - job-service: `0` (random port)
 - review-service: `0` (random port)
-
+- file-storage-service: `8089`
 ---
 
 ## 6. Roadmap
@@ -153,7 +153,7 @@ Gateway runs on **port 8081**. Current routes:
 
 **Checklist**
 - [x] Implement file-storage service 
-- [ ] Timeout & fallback for API calls
+- [x] Timeout & fallback for API calls
 - [ ] Swagger for each service
 
 ### 🔹 Version 3 – Event-driven (Async Communication)
