@@ -7,25 +7,21 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "user-service", path = "/internal/users")
+@FeignClient(name = "user-service", path = "/internal/users", fallback = UserClientFallback.class)
 public interface UserClient {
-    @GetMapping("/{id}")
-    ResponseEntity<ApiResponse<UserResponse>> getUserById(
-            @PathVariable Long id
-    );
+        @GetMapping("/{id}")
+        ResponseEntity<ApiResponse<UserResponse>> getUserById(
+                        @PathVariable Long id);
 
-    @GetMapping("/by-email")
-    ResponseEntity<ApiResponse<InternalUserResponse>> getUserByEmail(
-            @RequestParam String email
-    );
+        @GetMapping("/by-email")
+        ResponseEntity<ApiResponse<InternalUserResponse>> getUserByEmail(
+                        @RequestParam String email);
 
-    @PostMapping("/{id}/company")
-    ResponseEntity<ApiResponse<UserResponse>> addCompanyRoleToUser(
-            @PathVariable Long id
-    );
+        @PostMapping("/{id}/company")
+        ResponseEntity<ApiResponse<UserResponse>> addCompanyRoleToUser(
+                        @PathVariable Long id);
 
-    @DeleteMapping("/{id}/company")
-    ResponseEntity<ApiResponse<UserResponse>> deleteCompanyRoleToUser(
-            @PathVariable Long id
-    );
+        @DeleteMapping("/{id}/company")
+        ResponseEntity<ApiResponse<UserResponse>> deleteCompanyRoleToUser(
+                        @PathVariable Long id);
 }

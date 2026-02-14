@@ -1,6 +1,5 @@
 package com.dmatch.companyservice.clients;
 
-
 import com.dmatch.companyservice.commons.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -8,7 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "file-storage-service", path = "/internal/files")
+@FeignClient(name = "file-storage-service", path = "/internal/files", fallback = FileStorageClientFallback.class)
 public interface FileStorageClient {
 
     @DeleteMapping
