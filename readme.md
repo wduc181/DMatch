@@ -67,6 +67,7 @@ To run the project, follow these steps:
 - Spring Cloud: Config, Eureka, Gateway, OpenFeign, LoadBalancer
 - Flyway
 - PostgreSQL
+- AWS S3
 
 ---
 
@@ -111,7 +112,7 @@ Gateway runs on **port 8081**. Current routes:
   - Example: `POST /api/v1/auth/login` to authenticate a user.
 - `/internal/users/**`, `/api/v1/users/**`, `/api/v1/admin/users/**` → USER-SERVICE
   - Example: `GET /api/v1/users` to fetch all users.
-
+- `/api/v1/files/**` → FILE-STORAGE-SERVICE
 ---
 
 ## 5. Service Ports (local)
