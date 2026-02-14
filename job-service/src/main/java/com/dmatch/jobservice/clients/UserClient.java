@@ -7,11 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "user-service", path = "${app.internal-prefix}/users")
+@FeignClient(name = "user-service", path = "${app.internal-prefix}/users", fallback = UserClientFallback.class)
 public interface UserClient {
 
     @GetMapping("/by-email")
     ResponseEntity<ApiResponse<InternalUserResponse>> getUserByEmail(
-            @RequestParam String email
-    );
+            @RequestParam String email);
 }

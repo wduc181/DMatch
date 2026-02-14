@@ -7,11 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "company-service", path = "${app.api-prefix}/companies")
+@FeignClient(name = "company-service", path = "${app.api-prefix}/companies", fallback = CompanyClientFallback.class)
 public interface CompanyClient {
 
     @GetMapping("/{id}")
     ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(
-            @PathVariable Long id
-    );
+            @PathVariable Long id);
 }

@@ -17,6 +17,15 @@ import java.util.List;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ApiResponse<?>> handleServiceUnavailable(ServiceUnavailableException e) {
+        log.warn("Service unavailable: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.builder()
+                .message(e.getMessage())
+                .data(null)
+                .build());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception e) {
         log.error("Internal Server Error: ", e);
@@ -24,11 +33,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
                 .message("Internal Server Error. Please contact support.")
                 .data(null)
-                .build()
-        );
+                .build());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class})
+    @ExceptionHandler({ MethodArgumentNotValidException.class })
     public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
         List<String> errorMessages = e.getBindingResult().getFieldErrors()
                 .stream()
@@ -38,33 +46,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ApiResponse.builder()
                 .message(String.join(", ", errorMessages))
                 .data(null)
-                .build()
-        );
+                .build());
     }
-    @ExceptionHandler({PermissionDeniedException.class})
+
+    @ExceptionHandler({ PermissionDeniedException.class })
     public ResponseEntity<ApiResponse<?>> handlePermissionDeny(PermissionDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()
                 .message(e.getMessage())
                 .data(null)
-                .build()
-        );
+                .build());
     }
 
-    @ExceptionHandler({AccessDeniedException.class})
+    @ExceptionHandler({ AccessDeniedException.class })
     public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()
                 .message("Forbidden")
                 .data(null)
-                .build()
-        );
+                .build());
     }
 
-    @ExceptionHandler({AuthenticationException.class})
+    @ExceptionHandler({ AuthenticationException.class })
     public ResponseEntity<ApiResponse<?>> handleAuthentication(AuthenticationException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.builder()
                 .message("Unauthorized")
                 .data(null)
-                .build()
-        );
+                .build());
     }
 }
