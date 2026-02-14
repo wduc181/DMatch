@@ -11,9 +11,9 @@ public class UserServiceClientFallback implements UserServiceClient {
 
      @Override
      public ApiResponse<UserSummaryResponse> getUserById(Long id) {
-          log.warn("Fallback: User Service không khả dụng - getUserById({})", id);
+          log.warn("Fallback: User Service unavailable - getUserById({})", id);
           return ApiResponse.<UserSummaryResponse>builder()
-                    .message("User Service không khả dụng")
+                    .message("User Service unavailable")
                     .data(UserSummaryResponse.builder()
                               .id(id)
                               .email("unavailable")
@@ -25,9 +25,9 @@ public class UserServiceClientFallback implements UserServiceClient {
 
      @Override
      public ApiResponse<UserSummaryResponse> getUserByEmail(String email) {
-          log.warn("Fallback: User Service không khả dụng - getUserByEmail({})", email);
+          log.warn("Fallback: User Service unavailable - getUserByEmail({})", email);
           return ApiResponse.<UserSummaryResponse>builder()
-                    .message("User Service không khả dụng")
+                    .message("User Service unavailable")
                     .data(UserSummaryResponse.builder()
                               .id(null)
                               .email(email)

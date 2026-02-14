@@ -4,6 +4,7 @@ import com.dmatch.authservice.clients.UserClient;
 import com.dmatch.authservice.commons.ApiResponse;
 import com.dmatch.authservice.dtos.*;
 import com.dmatch.authservice.exceptions.PermissionDeniedException;
+import com.dmatch.authservice.exceptions.ServiceUnavailableException;
 import com.dmatch.authservice.services.interfaces.AuthService;
 import com.dmatch.authservice.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
 
         ApiResponse<UserResponse> response = userClient.createUser(userCreateRequest).getBody();
         if (response == null || response.getData() == null) {
-            throw new RuntimeException("Failed to create user");
+            throw new ServiceUnavailableException("User Service unavailable. Please try again later.");
         }
         return response.getData();
     }

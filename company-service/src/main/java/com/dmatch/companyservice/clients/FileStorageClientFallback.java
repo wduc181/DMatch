@@ -11,9 +11,9 @@ public class FileStorageClientFallback implements FileStorageClient {
 
      @Override
      public ResponseEntity<ApiResponse<Void>> deleteFile(String fileKey) {
-          log.warn("Fallback: File Storage Service không khả dụng - deleteFile({})", fileKey);
+          log.warn("Fallback: File Storage Service unavailable - deleteFile({})", fileKey);
           ApiResponse<Void> response = ApiResponse.<Void>builder()
-                    .message("File Storage Service không khả dụng")
+                    .message("File Storage Service unavailable")
                     .data(null)
                     .build();
           return ResponseEntity.ok(response);
@@ -21,9 +21,9 @@ public class FileStorageClientFallback implements FileStorageClient {
 
      @Override
      public ResponseEntity<ApiResponse<String>> getPresignedUrl(String fileKey) {
-          log.warn("Fallback: File Storage Service không khả dụng - getPresignedUrl({})", fileKey);
+          log.warn("Fallback: File Storage Service unavailable - getPresignedUrl({})", fileKey);
           ApiResponse<String> response = ApiResponse.<String>builder()
-                    .message("File Storage Service không khả dụng")
+                    .message("File Storage Service unavailable")
                     .data(null)
                     .build();
           return ResponseEntity.ok(response);

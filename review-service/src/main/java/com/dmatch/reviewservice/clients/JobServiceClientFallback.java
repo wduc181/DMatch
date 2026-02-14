@@ -11,9 +11,9 @@ public class JobServiceClientFallback implements JobServiceClient {
 
      @Override
      public ApiResponse<JobSummaryResponse> getJobById(Long id) {
-          log.warn("Fallback: Job Service không khả dụng - getJobById({})", id);
+          log.warn("Fallback: Job Service unavailable - getJobById({})", id);
           return ApiResponse.<JobSummaryResponse>builder()
-                    .message("Job Service không khả dụng")
+                    .message("Job Service unavailable")
                     .data(JobSummaryResponse.builder()
                               .id(id)
                               .title("Job Info Unavailable")

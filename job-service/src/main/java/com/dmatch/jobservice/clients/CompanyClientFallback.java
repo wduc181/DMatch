@@ -12,9 +12,9 @@ public class CompanyClientFallback implements CompanyClient {
 
      @Override
      public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyById(Long id) {
-          log.warn("Fallback: Company Service không khả dụng - getCompanyById({})", id);
+          log.warn("Fallback: Company Service unavailable - getCompanyById({})", id);
           ApiResponse<CompanyResponse> response = ApiResponse.<CompanyResponse>builder()
-                    .message("Company Service không khả dụng")
+                    .message("Company Service unavailable")
                     .data(null)
                     .build();
           return ResponseEntity.ok(response);

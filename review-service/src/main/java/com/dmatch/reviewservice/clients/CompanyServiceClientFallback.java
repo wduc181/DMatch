@@ -11,9 +11,9 @@ public class CompanyServiceClientFallback implements CompanyServiceClient {
 
      @Override
      public ApiResponse<CompanySummaryResponse> getCompanyById(Long id) {
-          log.warn("Fallback: Company Service không khả dụng - getCompanyById({})", id);
+          log.warn("Fallback: Company Service unavailable - getCompanyById({})", id);
           return ApiResponse.<CompanySummaryResponse>builder()
-                    .message("Company Service không khả dụng")
+                    .message("Company Service unavailable")
                     .data(CompanySummaryResponse.builder()
                               .id(id)
                               .name("Company Info Unavailable")
