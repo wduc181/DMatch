@@ -66,3 +66,16 @@ resilience4j:
       USER-SERVICE:
         base-config: default
         timeout-duration: 5s
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+openapi:
+  service:
+    title: Review Service API
+    version: 1.0.0
+    url: http://localhost:8081

@@ -40,3 +40,16 @@ eureka:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
     lease-renewal-interval-in-seconds: 3
     lease-expiration-duration-in-seconds: 10
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+openapi:
+  service:
+    title: File Storage Service API
+    version: 1.0.0
+    url: http://localhost:8081
