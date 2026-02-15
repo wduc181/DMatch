@@ -115,17 +115,29 @@ Gateway runs on **port 8081**. Current routes:
 - `/api/v1/files/**` → FILE-STORAGE-SERVICE
 ---
 
-## 5. Service Ports (local)
+## 5. Service Ports
 
-- discovery-service: `8111`
-- config-server: `8888`
-- api-gateway: `8081`
-- auth-service: `0` (random port)
-- user-service: `0` (random port)
-- company-service: `0` (random port)
-- job-service: `0` (random port)
-- review-service: `0` (random port)
-- file-storage-service: `8089`
+### Docker Compose (khuyến nghị)
+
+| Service | Host Port | URL |
+|---|---|---|
+| discovery-service | `8111` | http://localhost:8111 |
+| config-server | `8888` | http://localhost:8888 |
+| api-gateway | `8081` | http://localhost:8081 |
+| user-service | `8082` | http://localhost:8082 |
+| auth-service | `8083` | http://localhost:8083 |
+| company-service | `8084` | http://localhost:8084 |
+| job-service | `8085` | http://localhost:8085 |
+| review-service | `8086` | http://localhost:8086 |
+| file-storage-service | `8087` | http://localhost:8087 |
+
+> **Lưu ý:** Nếu chạy thủ công từng service (không dùng Docker Compose), các service sẽ dùng **random port** (cấu hình `server.port=0`). Kiểm tra port thực tế trên Eureka Dashboard: http://localhost:8111
+
+### Swagger UI
+
+Khi hệ thống đang chạy, truy cập Swagger UI của từng service tại:
+`http://localhost:{port}/swagger-ui/index.html`
+
 ---
 
 ## 6. Roadmap
@@ -154,7 +166,7 @@ Gateway runs on **port 8081**. Current routes:
 **Checklist**
 - [x] Implement file-storage service 
 - [x] Timeout & fallback for API calls
-- [ ] Swagger for each service
+- [x] Swagger for each service
 
 ### 🔹 Version 3 – Event-driven (Async Communication)
 

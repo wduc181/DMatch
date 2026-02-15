@@ -15,7 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -35,7 +35,7 @@ services:
       EUREKA_CLIENT_REGISTER-WITH-EUREKA: "false"
       EUREKA_CLIENT_FETCH-REGISTRY: "false"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8111/actuator/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8111/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -58,7 +58,7 @@ services:
       discovery-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -82,7 +82,7 @@ services:
       config-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8081/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -97,6 +97,8 @@ services:
       context: ./user-service
       dockerfile: Dockerfile
     container_name: dmatch-user
+    ports:
+      - "8082:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
@@ -111,7 +113,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -126,6 +128,8 @@ services:
       context: ./auth-service
       dockerfile: Dockerfile
     container_name: dmatch-auth
+    ports:
+      - "8083:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
@@ -146,6 +150,8 @@ services:
       context: ./company-service
       dockerfile: Dockerfile
     container_name: dmatch-company
+    ports:
+      - "8084:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
@@ -169,6 +175,8 @@ services:
       context: ./job-service
       dockerfile: Dockerfile
     container_name: dmatch-job
+    ports:
+      - "8085:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
@@ -192,6 +200,8 @@ services:
       context: ./review-service
       dockerfile: Dockerfile
     container_name: dmatch-review
+    ports:
+      - "8086:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
@@ -215,6 +225,8 @@ services:
       context: ./file-storage-service
       dockerfile: Dockerfile
     container_name: dmatch-file-storage
+    ports:
+      - "8087:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
@@ -232,6 +244,7 @@ services:
 
 volumes:
   postgres_data:
+
 
 networks:
   dmatch-network:
