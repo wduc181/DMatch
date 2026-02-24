@@ -130,6 +130,7 @@ Gateway runs on **port 8081**. Current routes:
 | job-service | `8085` | http://localhost:8085 |
 | review-service | `8086` | http://localhost:8086 |
 | file-storage-service | `8087` | http://localhost:8087 |
+| kafka | `9094` | localhost:9094 |
 
 > **Lưu ý:** Nếu chạy thủ công từng service (không dùng Docker Compose), các service sẽ dùng **random port** (cấu hình `server.port=0`). Kiểm tra port thực tế trên Eureka Dashboard: http://localhost:8111
 
@@ -174,10 +175,14 @@ Khi hệ thống đang chạy, truy cập Swagger UI của từng service tại:
 - Apache Kafka
 
 **Checklist**
-- [ ] Setup Kafka (Docker)
+- [x] Setup Kafka (Docker)
 - [ ] Produce events on job/review creation
 - [ ] Consumers for async processing
 - [ ] No database joins across services
+
+**Kafka bootstrap server (local):** `localhost:9094`
+
+**Kafka bootstrap server (inside docker network):** `kafka:9092`
 
 ### 🔹 Version 4 – Search & Indexing
 
