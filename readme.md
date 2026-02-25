@@ -176,9 +176,10 @@ Khi hệ thống đang chạy, truy cập Swagger UI của từng service tại:
 
 **Checklist**
 - [x] Setup Kafka (Docker)
-- [ ] Produce events on job/review creation
-- [ ] Consumers for async processing
-- [ ] No database joins across services
+- [x] Async file deletion event (`company-service` -> Kafka -> `file-storage-service`)
+- [x] Produce events on job/review creation
+- [x] Consumers for async processing
+- [x] No database joins across services
 
 **Kafka bootstrap server (local):** `localhost:9094`
 

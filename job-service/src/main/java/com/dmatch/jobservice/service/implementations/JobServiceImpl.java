@@ -17,6 +17,7 @@ import com.dmatch.jobservice.repositories.JobRepository;
 import com.dmatch.jobservice.service.interfaces.JobService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,12 +34,14 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JobServiceImpl implements JobService {
     private final JobRepository jobRepository;
     private final JobLevelRepository jobLevelRepository;
     private final JobCategoryRepository jobCategoryRepository;
     private final CompanyClient companyClient;
     private final UserClient userClient;
+    private final JobEventPublisher jobEventPublisher;
 
     @Override
     @Transactional
@@ -81,6 +84,13 @@ public class JobServiceImpl implements JobService {
         }
 
         Job saved = jobRepository.save(job);
+
+        try {
+            jobEventPublisher.publishJobCreated(saved.getId(), companyId, saved.getTitle());
+        } catch (Exception e) {
+            log.warn("Failed to publish job-created event for jobId={}: {}", saved.getId(), e.getMessage());
+        }
+
         return JobResponse.fromJob(saved);
     }
 
@@ -194,17 +204,17 @@ public class JobServiceImpl implements JobService {
                     request.getJobType(),
                     request.getLocation(),
                     pageable)
-                .map(JobResponse::fromJob);
+                    .map(JobResponse::fromJob);
         }
 
         if (request.getJobType() != null) {
             return jobRepository.findByJobType(request.getJobType(), pageable)
-                .map(JobResponse::fromJob);
+                    .map(JobResponse::fromJob);
         }
 
         if (request.getLocation() != null) {
             return jobRepository.findByLocationContainingIgnoreCase(request.getLocation(), pageable)
-                .map(JobResponse::fromJob);
+                    .map(JobResponse::fromJob);
         }
 
         if (request.getKeyword() != null && !request.getKeyword().isBlank()) {

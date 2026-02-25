@@ -1,6 +1,5 @@
 package com.dmatch.companyservice.services.implementations;
 
-import com.dmatch.companyservice.clients.FileStorageClient;
 import com.dmatch.companyservice.clients.UserClient;
 import com.dmatch.companyservice.dtos.CompanyCreateRequest;
 import com.dmatch.companyservice.dtos.CompanyResponse;
@@ -31,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final UserClient userClient;
-    private final FileStorageClient fileStorageClient;
+    private final FileDeletionEventPublisher fileDeletionEventPublisher;
 
     @Override
     @Transactional
@@ -180,10 +179,10 @@ public class CompanyServiceImpl implements CompanyService {
      //Catch exception để không ảnh hưởng flow chính khi file-storage-service không khả dụng.
     private void deleteFileQuietly(String fileKey) {
         try {
-            fileStorageClient.deleteFile(fileKey);
+            fileDeletionEventPublisher.publishDeleteFile(fileKey);
         } catch (Exception e) {
             // Log warning nhưng không throw
-            log.warn("Failed to delete file '{}' from storage: {}", fileKey, e.getMessage());
+            log.warn("Failed to publish delete-file event for key '{}': {}", fileKey, e.getMessage());
         }
     }
 }

@@ -1,4 +1,9 @@
 spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   cloud:
     openfeign:
       circuitbreaker:
@@ -27,6 +32,9 @@ logging:
 app:
   api-prefix: /api/v1
   internal-prefix: /internal
+  kafka:
+    topics:
+      review-created: review-created
 
 eureka:
   instance:

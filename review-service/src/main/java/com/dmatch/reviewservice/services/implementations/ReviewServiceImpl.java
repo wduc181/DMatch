@@ -23,6 +23,7 @@ import com.dmatch.reviewservice.repositories.ReviewRepository;
 import com.dmatch.reviewservice.services.interfaces.ReviewService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,12 +38,14 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewServiceImpl implements ReviewService {
 
 	private final ReviewRepository reviewRepository;
 	private final CompanyServiceClient companyServiceClient;
 	private final JobServiceClient jobServiceClient;
 	private final UserServiceClient userServiceClient;
+	private final ReviewEventPublisher reviewEventPublisher;
 
 	@Override
 	@Transactional
@@ -75,6 +78,15 @@ public class ReviewServiceImpl implements ReviewService {
 				.build();
 
 		Review saved = reviewRepository.save(review);
+
+		try {
+			reviewEventPublisher.publishReviewCreated(
+					saved.getId(), saved.getUserId(), saved.getCompanyId(),
+					saved.getJobId(), saved.getRating() == null ? null : saved.getRating().intValue());
+		} catch (Exception e) {
+			log.warn("Failed to publish review-created event for reviewId={}: {}", saved.getId(), e.getMessage());
+		}
+
 		return toResponse(saved);
 	}
 
@@ -142,7 +154,8 @@ public class ReviewServiceImpl implements ReviewService {
 
 		if (companyId != null) {
 			validateCompanyExists(companyId);
-			Double avg = reviewRepository.getAverageRatingByCompanyIdAndStatus(companyId, ReviewStatus.ACTIVE.name());
+			Double avg = reviewRepository.getAverageRatingByCompanyIdAndStatus(companyId,
+					ReviewStatus.ACTIVE.name());
 			long total = reviewRepository.countByCompanyIdAndStatus(companyId, ReviewStatus.ACTIVE.name());
 			return ReviewSummaryResponse.builder()
 					.companyId(companyId)
@@ -213,7 +226,8 @@ public class ReviewServiceImpl implements ReviewService {
 		Specification<Review> specification = Specification.where(null);
 
 		if (request.getCompanyId() != null) {
-			specification = specification.and((root, query, cb) -> cb.equal(root.get("companyId"), request.getCompanyId()));
+			specification = specification
+					.and((root, query, cb) -> cb.equal(root.get("companyId"), request.getCompanyId()));
 		}
 
 		if (request.getJobId() != null) {
@@ -221,15 +235,18 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 
 		if (request.getUserId() != null) {
-			specification = specification.and((root, query, cb) -> cb.equal(root.get("userId"), request.getUserId()));
+			specification = specification
+					.and((root, query, cb) -> cb.equal(root.get("userId"), request.getUserId()));
 		}
 
 		if (request.getRating() != null) {
-			specification = specification.and((root, query, cb) -> cb.equal(root.get("rating"), request.getRating().shortValue()));
+			specification = specification
+					.and((root, query, cb) -> cb.equal(root.get("rating"), request.getRating().shortValue()));
 		}
 
 		if (request.getStatus() != null && !request.getStatus().isBlank()) {
-			specification = specification.and((root, query, cb) -> cb.equal(root.get("status"), request.getStatus()));
+			specification = specification
+					.and((root, query, cb) -> cb.equal(root.get("status"), request.getStatus()));
 		}
 
 		return specification;

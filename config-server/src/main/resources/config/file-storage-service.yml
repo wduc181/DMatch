@@ -4,6 +4,13 @@ server:
 spring:
   application:
     name: file-storage-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   cloud:
     aws:
       credentials:
@@ -28,6 +35,9 @@ logging:
 app:
   api-prefix: /api/v1
   internal-prefix: /internal
+  kafka:
+    topics:
+      file-delete: file-delete-requested
 
 eureka:
   client:

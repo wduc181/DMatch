@@ -10,16 +10,6 @@ import org.springframework.stereotype.Component;
 public class FileStorageClientFallback implements FileStorageClient {
 
      @Override
-     public ResponseEntity<ApiResponse<Void>> deleteFile(String fileKey) {
-          log.warn("Fallback: File Storage Service unavailable - deleteFile({})", fileKey);
-          ApiResponse<Void> response = ApiResponse.<Void>builder()
-                    .message("File Storage Service unavailable")
-                    .data(null)
-                    .build();
-          return ResponseEntity.ok(response);
-     }
-
-     @Override
      public ResponseEntity<ApiResponse<String>> getPresignedUrl(String fileKey) {
           log.warn("Fallback: File Storage Service unavailable - getPresignedUrl({})", fileKey);
           ApiResponse<String> response = ApiResponse.<String>builder()
