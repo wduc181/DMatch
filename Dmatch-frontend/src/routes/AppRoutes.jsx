@@ -34,6 +34,9 @@ import CompanyProfileEditPage from '../pages/recruiter/CompanyProfileEditPage';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import UserManagementPage from '../pages/admin/UserManagementPage';
 
+// Not Found
+import NotFoundPage from '../pages/NotFoundPage';
+
 const AppRoutes = () => {
      return (
           <BrowserRouter>
@@ -79,6 +82,9 @@ const AppRoutes = () => {
                               <Route path="/admin/users" element={<UserManagementPage />} />
                          </Route>
                     </Route>
+
+                    {/* ===== 404 Not Found ===== */}
+                    <Route path="*" element={<NotFoundPage />} />
                </Routes>
           </BrowserRouter>
      );
