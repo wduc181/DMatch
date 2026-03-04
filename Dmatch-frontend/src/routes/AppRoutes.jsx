@@ -18,6 +18,7 @@ import CompanyDetailPage from '../pages/public/CompanyDetailPage';
 // Auth Pages
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
+import OnboardingPage from '../pages/auth/OnboardingPage';
 
 // Candidate Pages
 import CandidateProfilePage from '../pages/candidate/CandidateProfilePage';
@@ -54,6 +55,7 @@ const AppRoutes = () => {
                     <Route element={<AuthLayout />}>
                          <Route path="/login" element={<LoginPage />} />
                          <Route path="/register" element={<RegisterPage />} />
+                         <Route path="/onboarding" element={<OnboardingPage />} />
                     </Route>
 
                     {/* ===== C. Candidate Routes - MainLayout + ProtectedRoute (role: USER) ===== */}
