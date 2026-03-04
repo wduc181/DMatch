@@ -1,13 +1,22 @@
-import { Link, NavLink } from 'react-router-dom';
-import { LogIn, UserPlus, Briefcase, Building2 } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus, Briefcase, Building2, Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import useAuthStore from '@/store/useAuthStore';
 
 const Topbar = () => {
+     const { isAuthenticated, user, logout } = useAuthStore();
+     const navigate = useNavigate();
+
      const navLinkClass = ({ isActive }) =>
           `text-sm font-medium transition-colors duration-200 ${isActive
                ? 'text-primary'
                : 'text-muted-foreground hover:text-foreground'
           }`;
+
+     const handleMenuClick = () => {
+          // TODO: mở sidebar bên phải (sẽ làm sau)
+          console.log('[Sidebar] open');
+     };
 
      return (
           <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
@@ -47,20 +56,46 @@ const Topbar = () => {
                               </NavLink>
                          </div>
 
-                         {/* Auth Buttons */}
-                         <div className="flex items-center gap-3">
-                              <Button variant="outline" size="sm" asChild>
-                                   <Link to="/login">
-                                        <LogIn size={16} />
-                                        <span className="hidden sm:inline">Đăng nhập</span>
-                                   </Link>
-                              </Button>
-                              <Button size="sm" asChild>
-                                   <Link to="/register">
-                                        <UserPlus size={16} />
-                                        <span className="hidden sm:inline">Đăng ký</span>
-                                   </Link>
-                              </Button>
+                         {/* Auth Area */}
+                         <div className="flex items-center gap-2">
+                              {isAuthenticated ? (
+                                   <>
+                                        {/* Icon người + Tên user */}
+                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
+                                             <div className="flex items-center justify-center size-7 rounded-full bg-primary/10 text-primary">
+                                                  <User size={16} />
+                                             </div>
+                                             <span className="text-sm font-medium text-foreground max-w-32 truncate hidden sm:block">
+                                                  {user?.fullName || 'User'}
+                                             </span>
+                                        </div>
+
+                                        {/* Nút 3 gạch (hamburger) */}
+                                        <Button
+                                             variant="ghost"
+                                             size="icon"
+                                             onClick={handleMenuClick}
+                                             className="text-foreground"
+                                        >
+                                             <Menu size={20} />
+                                        </Button>
+                                   </>
+                              ) : (
+                                   <>
+                                        <Button variant="outline" size="sm" asChild>
+                                             <Link to="/login">
+                                                  <LogIn size={16} />
+                                                  <span className="hidden sm:inline">Đăng nhập</span>
+                                             </Link>
+                                        </Button>
+                                        <Button size="sm" asChild>
+                                             <Link to="/register">
+                                                  <UserPlus size={16} />
+                                                  <span className="hidden sm:inline">Đăng ký</span>
+                                             </Link>
+                                        </Button>
+                                   </>
+                              )}
                          </div>
                     </div>
                </div>
@@ -69,4 +104,3 @@ const Topbar = () => {
 };
 
 export default Topbar;
-

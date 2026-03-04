@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Building2, CheckCircle2 } from 'lucide-react';
+import { User, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import {
      FormLabel,
      FormMessage,
 } from '@/components/ui/form';
+import { registerApi } from '@/services/auth.service';
 
 // Schema Ứng viên: fullName bắt buộc (match AuthRegisterRequest.fullName)
 const candidateSchema = z.object({
@@ -34,6 +35,8 @@ const OnboardingPage = () => {
      const location = useLocation();
      const navigate = useNavigate();
      const [activeTab, setActiveTab] = useState('candidate');
+     const [serverError, setServerError] = useState('');
+     const [isSubmitting, setIsSubmitting] = useState(false);
 
      const { email, password } = location.state || {};
 
@@ -54,34 +57,65 @@ const OnboardingPage = () => {
           defaultValues: { fullName: '', companyName: '', companyAddress: '' },
      });
 
-     const handleCandidateSubmit = (data) => {
-          // Gom DTO giống AuthRegisterRequest
-          const registerPayload = {
-               email,
-               password,
-               fullName: data.fullName,
-               role: 'USER',
-          };
-          console.log('[Register - Candidate]', registerPayload);
-          // TODO: Gọi API auth/register
-          navigate('/login', { replace: true });
+     const handleCandidateSubmit = async (data) => {
+          setServerError('');
+          setIsSubmitting(true);
+          try {
+               // AuthRegisterRequest: { email, fullName, password }
+               const registerPayload = {
+                    email,
+                    password,
+                    fullName: data.fullName,
+               };
+               await registerApi(registerPayload);
+
+               // TODO: Nếu cần lưu phone, gọi thêm API update profile ở đây
+
+               navigate('/login', {
+                    replace: true,
+                    state: { registered: true },
+               });
+          } catch (err) {
+               const msg =
+                    err.response?.data?.message ||
+                    'Đăng ký thất bại. Vui lòng thử lại.';
+               setServerError(msg);
+          } finally {
+               setIsSubmitting(false);
+          }
      };
 
-     const handleRecruiterSubmit = (data) => {
-          const registerPayload = {
-               email,
-               password,
-               fullName: data.fullName,
-               role: 'COMPANY',
-          };
-          // CompanyCreateRequest (sẽ gọi sau khi register thành công)
-          const companyPayload = {
-               name: data.companyName,
-               address: data.companyAddress || '',
-          };
-          console.log('[Register - Recruiter]', registerPayload, companyPayload);
-          // TODO: Gọi API auth/register → rồi POST company
-          navigate('/login', { replace: true });
+     const handleRecruiterSubmit = async (data) => {
+          setServerError('');
+          setIsSubmitting(true);
+          try {
+               // AuthRegisterRequest: { email, fullName, password }
+               const registerPayload = {
+                    email,
+                    password,
+                    fullName: data.fullName,
+               };
+               await registerApi(registerPayload);
+
+               // TODO: Sau khi register → login → gọi POST /api/v1/companies để tạo company
+               // CompanyCreateRequest: { name, address }
+               console.log('[Company - will create later]', {
+                    name: data.companyName,
+                    address: data.companyAddress || '',
+               });
+
+               navigate('/login', {
+                    replace: true,
+                    state: { registered: true },
+               });
+          } catch (err) {
+               const msg =
+                    err.response?.data?.message ||
+                    'Đăng ký thất bại. Vui lòng thử lại.';
+               setServerError(msg);
+          } finally {
+               setIsSubmitting(false);
+          }
      };
 
      // Guard render
@@ -98,6 +132,14 @@ const OnboardingPage = () => {
                     </CardDescription>
                </CardHeader>
                <CardContent className="px-0">
+                    {/* Server Error */}
+                    {serverError && (
+                         <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-destructive/10 text-destructive text-sm">
+                              <AlertCircle size={16} className="shrink-0" />
+                              {serverError}
+                         </div>
+                    )}
+
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                          <TabsList className="grid w-full grid-cols-2 mb-6">
                               <TabsTrigger value="candidate" className="gap-2">
@@ -147,9 +189,13 @@ const OnboardingPage = () => {
                                                   </FormItem>
                                              )}
                                         />
-                                        <Button type="submit" className="w-full" size="lg">
-                                             <CheckCircle2 size={18} />
-                                             Hoàn tất đăng ký
+                                        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                                             {isSubmitting ? (
+                                                  <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                             ) : (
+                                                  <CheckCircle2 size={18} />
+                                             )}
+                                             {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất đăng ký'}
                                         </Button>
                                    </form>
                               </Form>
@@ -201,9 +247,13 @@ const OnboardingPage = () => {
                                                   </FormItem>
                                              )}
                                         />
-                                        <Button type="submit" className="w-full" size="lg">
-                                             <CheckCircle2 size={18} />
-                                             Hoàn tất đăng ký
+                                        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                                             {isSubmitting ? (
+                                                  <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                             ) : (
+                                                  <CheckCircle2 size={18} />
+                                             )}
+                                             {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất đăng ký'}
                                         </Button>
                                    </form>
                               </Form>

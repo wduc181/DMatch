@@ -1,28 +1,46 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import useAuthStore from '@/store/useAuthStore';
 
 /**
- * ProtectedRoute - Component bọc các route cần xác thực và phân quyền.
- * 
+ * ProtectedRoute — bảo vệ route theo xác thực + phân quyền.
+ *
  * Props:
- *  - allowedRoles: Mảng các role được phép truy cập (ví dụ: ['USER'], ['COMPANY'], ['ADMIN'])
- * 
- * TODO: Tích hợp với AuthContext/Zustand store để lấy thông tin user và token.
- * Hiện tại chỉ là placeholder, luôn redirect về /login.
+ *   - allowedRoles: string[] (ví dụ: ['USER'], ['COMPANY'], ['ADMIN'])
+ *
+ * Logic:
+ *   1. Đang hydrate → loading spinner
+ *   2. Chưa login → redirect /login
+ *   3. Sai role → redirect /403
+ *   4. Hợp lệ → render children
  */
 const ProtectedRoute = ({ allowedRoles }) => {
-     // TODO: Lấy token và role từ auth state
-     const isAuthenticated = false; // Thay bằng logic kiểm tra token
-     const userRole = null; // Thay bằng role thực tế từ token/store
+     const { isAuthenticated, isLoading, user } = useAuthStore();
 
+     // Đang hydrate từ localStorage
+     if (isLoading) {
+          return (
+               <div className="min-h-screen flex items-center justify-center">
+                    <div className="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+               </div>
+          );
+     }
+
+     // Chưa đăng nhập
      if (!isAuthenticated) {
           return <Navigate to="/login" replace />;
      }
 
-     if (allowedRoles && !allowedRoles.includes(userRole)) {
-          return <Navigate to="/403" replace />;
+     // Kiểm tra role — user.roles là List<String> từ backend
+     if (allowedRoles && allowedRoles.length > 0) {
+          const userRoles = user?.roles || [];
+          const hasPermission = userRoles.some((role) => allowedRoles.includes(role));
+          if (!hasPermission) {
+               return <Navigate to="/403" replace />;
+          }
      }
 
      return <Outlet />;
 };
 
 export default ProtectedRoute;
+

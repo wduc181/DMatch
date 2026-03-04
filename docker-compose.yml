@@ -285,6 +285,21 @@ services:
     networks:
       - dmatch-network
 
+  # ==================== 10. Frontend ====================
+
+  frontend:
+    build:
+      context: ./Dmatch-frontend
+      dockerfile: Dockerfile
+    container_name: dmatch-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - dmatch-network
+
 volumes:
   postgres_data:
   kafka_data:

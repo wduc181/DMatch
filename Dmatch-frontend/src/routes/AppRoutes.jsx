@@ -37,6 +37,7 @@ import UserManagementPage from '../pages/admin/UserManagementPage';
 
 // Not Found
 import NotFoundPage from '../pages/NotFoundPage';
+import ForbiddenPage from '../pages/ForbiddenPage';
 
 const AppRoutes = () => {
      return (
@@ -84,6 +85,9 @@ const AppRoutes = () => {
                               <Route path="/admin/users" element={<UserManagementPage />} />
                          </Route>
                     </Route>
+
+                    {/* ===== 403 Forbidden ===== */}
+                    <Route path="/403" element={<ForbiddenPage />} />
 
                     {/* ===== 404 Not Found ===== */}
                     <Route path="*" element={<NotFoundPage />} />

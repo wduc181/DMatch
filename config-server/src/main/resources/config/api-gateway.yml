@@ -13,6 +13,22 @@ spring:
       httpclient:
         connect-timeout: 1000
         response-timeout: 5s
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - "http://localhost:5173"
+              - "http://localhost:5174"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
       discovery:
         locator:
           enabled: false
