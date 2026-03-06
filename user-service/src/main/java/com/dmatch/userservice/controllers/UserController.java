@@ -1,8 +1,11 @@
 package com.dmatch.userservice.controllers;
 
 import com.dmatch.userservice.commons.ApiResponse;
+import com.dmatch.userservice.dtos.CandidateProfileResponse;
+import com.dmatch.userservice.dtos.CandidateProfileUpdateRequest;
 import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +30,31 @@ public class UserController {
                 .build());
     }
 
+    // ==================== Candidate Profile ====================
+
+    @GetMapping("/users/me/profile")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<CandidateProfileResponse>> getMyProfile() {
+        CandidateProfileResponse profile = userService.getMyProfile();
+        return ResponseEntity.ok(ApiResponse.<CandidateProfileResponse>builder()
+                .message("Got candidate profile")
+                .data(profile)
+                .build());
+    }
+
+    @PutMapping("/users/me/profile")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ApiResponse<CandidateProfileResponse>> updateMyProfile(
+            @Valid @RequestBody CandidateProfileUpdateRequest request) {
+        CandidateProfileResponse profile = userService.updateMyProfile(request);
+        return ResponseEntity.ok(ApiResponse.<CandidateProfileResponse>builder()
+                .message("Updated candidate profile")
+                .data(profile)
+                .build());
+    }
+
+    // ==================== Admin ====================
+
     @GetMapping("/admin/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
@@ -39,8 +67,7 @@ public class UserController {
     @PutMapping("/admin/users/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> changeUserStatus(
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         UserResponse user = userService.changeUserStatus(id);
         return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
                 .message("Updated user status")

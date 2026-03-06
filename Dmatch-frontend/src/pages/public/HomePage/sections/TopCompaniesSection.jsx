@@ -41,7 +41,7 @@ const TopCompaniesSection = () => {
                                              key={company.id}
                                              className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                                         >
-                                             <CompanyCard company={company} />
+                                             <CompanyCard company={company} variant="compact" />
                                         </CarouselItem>
                                    ))}
                               </CarouselContent>
