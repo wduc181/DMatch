@@ -14,6 +14,14 @@ import { Button } from '@/components/ui/button';
  *   - "compact": dùng ở HomePage carousel (layout ngang, nhỏ gọn)
  *   - "full": dùng ở CompanyListingPage (layout dọc, card lớn, có cover)
  */
+/**
+ * Loại bỏ HTML tags, trả về plain text cho hiển thị tóm tắt.
+ */
+const stripHtml = (html) => {
+     if (!html) return '';
+     return html.replace(/<[^>]*>/g, '');
+};
+
 const CompanyCard = ({ company, variant = 'full' }) => {
      const initials = company.name
           .split(' ')
@@ -57,7 +65,7 @@ const CompanyCard = ({ company, variant = 'full' }) => {
                                         {company.name}
                                    </h3>
                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                                        {company.description}
+                                        {stripHtml(company.description)}
                                    </p>
                                    {company.open_jobs != null && (
                                         <span className="inline-flex items-center gap-1 text-xs text-primary mt-2">
