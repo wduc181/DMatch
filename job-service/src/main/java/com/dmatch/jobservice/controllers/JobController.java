@@ -73,6 +73,7 @@ public class JobController {
 	    @RequestParam(value = "salary_min", required = false) Long salaryMin,
 	    @RequestParam(value = "salary_max", required = false) Long salaryMax,
 	    @RequestParam(value = "company_id", required = false) Long companyId,
+	    @RequestParam(value = "sort", required = false) String sort,
 	    @RequestParam(value = "page", defaultValue = "1") int page,
 	    @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
@@ -86,6 +87,7 @@ public class JobController {
 		request.setSalaryMin(salaryMin);
 		request.setSalaryMax(salaryMax);
 		request.setCompanyId(companyId);
+		request.setSort(sort);
 
 		Page<JobResponse> jobs = jobService.getJobs(request, page, limit);
 		return ResponseEntity.ok(ApiResponse.<Page<JobResponse>>builder()

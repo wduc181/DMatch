@@ -1,6 +1,8 @@
 package com.dmatch.companyservice.services.implementations;
 
+import com.dmatch.companyservice.clients.JobClient;
 import com.dmatch.companyservice.clients.UserClient;
+import com.dmatch.companyservice.commons.ApiResponse;
 import com.dmatch.companyservice.dtos.CompanyCreateRequest;
 import com.dmatch.companyservice.dtos.CompanyResponse;
 import com.dmatch.companyservice.dtos.CompanyUpdateRequest;
@@ -24,12 +26,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final UserClient userClient;
+    private final JobClient jobClient;
     private final FileDeletionEventPublisher fileDeletionEventPublisher;
 
     @Override
@@ -49,7 +56,9 @@ public class CompanyServiceImpl implements CompanyService {
                 .description(request.getDescription())
                 .address(request.getAddress())
                 .logoKey(request.getLogoKey())
+                .coverKey(request.getCoverKey())
                 .website(request.getWebsite())
+                .industry(request.getIndustry())
                 .employeeSize(request.getEmployeeSize())
                 .ownerId(ownerId)
                 .build();
@@ -73,8 +82,10 @@ public class CompanyServiceImpl implements CompanyService {
         company.setDescription(request.getDescription());
         company.setAddress(request.getAddress());
         company.setWebsite(request.getWebsite());
+        company.setIndustry(request.getIndustry());
         company.setEmployeeSize(request.getEmployeeSize());
 
+        // Handle logo_key change
         String oldLogoKey = company.getLogoKey();
         String newLogoKey = request.getLogoKey();
         if (oldLogoKey != null && !oldLogoKey.isBlank()
@@ -82,6 +93,15 @@ public class CompanyServiceImpl implements CompanyService {
             deleteFileQuietly(oldLogoKey);
         }
         company.setLogoKey(newLogoKey);
+
+        // Handle cover_key change
+        String oldCoverKey = company.getCoverKey();
+        String newCoverKey = request.getCoverKey();
+        if (oldCoverKey != null && !oldCoverKey.isBlank()
+                && (newCoverKey == null || !oldCoverKey.equals(newCoverKey))) {
+            deleteFileQuietly(oldCoverKey);
+        }
+        company.setCoverKey(newCoverKey);
 
         companyRepository.save(company);
 
@@ -107,16 +127,61 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Page<CompanyResponse> getAllCompanies(int page, int limit) {
+    public Page<CompanyResponse> getAllCompanies(int page, int limit,
+                                                 String keyword, String location,
+                                                 Integer minSize, Integer maxSize) {
         int pageNo = page < 1 ? 0 : page - 1;
 
         Pageable pageable = PageRequest.of(
                 pageNo,
                 limit,
-                Sort.by("createdAt").descending()
-        );
-        return companyRepository.findAll(pageable)
+                Sort.by("createdAt").descending());
+
+        // Chuẩn hóa params: empty string -> null để JPQL bỏ qua filter
+        String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        String loc = (location != null && !location.isBlank()) ? location.trim() : null;
+
+        Page<CompanyResponse> companyPage = companyRepository
+                .searchCompanies(kw, loc, minSize, maxSize, pageable)
                 .map(CompanyResponse::fromCompany);
+
+        // Enrich open_jobs count từ job-service qua Feign
+        enrichWithOpenJobsCount(companyPage);
+
+        return companyPage;
+    }
+
+    /**
+     * Gọi job-service để lấy số lượng job ACTIVE cho từng company trên page hiện tại.
+     * Nếu job-service không khả dụng, open_jobs sẽ = 0 (fallback).
+     */
+    private void enrichWithOpenJobsCount(Page<CompanyResponse> companyPage) {
+        List<Long> companyIds = companyPage.getContent().stream()
+                .map(CompanyResponse::getId)
+                .toList();
+
+        if (companyIds.isEmpty()) {
+            return;
+        }
+
+        Map<Long, Integer> jobCountMap = getJobCountsByCompanyIds(companyIds);
+
+        companyPage.getContent().forEach(company ->
+                company.setOpenJobs(jobCountMap.getOrDefault(company.getId(), 0))
+        );
+    }
+
+    private Map<Long, Integer> getJobCountsByCompanyIds(List<Long> companyIds) {
+        try {
+            var response = jobClient.countActiveJobsByCompanyIds(companyIds);
+            if (response != null && response.getBody() != null
+                    && response.getBody().getData() != null) {
+                return response.getBody().getData();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch job counts from job-service: {}", e.getMessage());
+        }
+        return Collections.emptyMap();
     }
 
     @Override
@@ -176,7 +241,8 @@ public class CompanyServiceImpl implements CompanyService {
         }
     }
 
-     //Catch exception để không ảnh hưởng flow chính khi file-storage-service không khả dụng.
+    // Catch exception để không ảnh hưởng flow chính khi file-storage-service không
+    // khả dụng.
     private void deleteFileQuietly(String fileKey) {
         try {
             fileDeletionEventPublisher.publishDeleteFile(fileKey);
@@ -184,5 +250,16 @@ public class CompanyServiceImpl implements CompanyService {
             // Log warning nhưng không throw
             log.warn("Failed to publish delete-file event for key '{}': {}", fileKey, e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompanyResponse> getCompaniesByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return companyRepository.findAllById(ids).stream()
+                .map(CompanyResponse::fromCompany)
+                .toList();
     }
 }

@@ -33,7 +33,12 @@ public class Company {
     @Column(name = "logo_key")
     private String logoKey;
 
+    @Column(name = "cover_key")
+    private String coverKey;
+
     private String website;
+
+    private String industry;
 
     @Column(name = "employee_size")
     private Integer employeeSize;

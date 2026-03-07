@@ -9,6 +9,7 @@ import com.dmatch.jobservice.dtos.JobUpdateRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Map;
 
 public interface JobService {
 	JobResponse createJob(JobCreateRequest request, Long companyId);
@@ -23,4 +24,9 @@ public interface JobService {
 
 	List<JobLevelResponse> getJobLevels();
 	List<JobCategoryResponse> getJobCategories();
+
+	/**
+	 * Đếm số job ACTIVE cho danh sách company IDs (dùng cho internal API).
+	 */
+	Map<Long, Integer> countActiveJobsByCompanyIds(List<Long> companyIds);
 }

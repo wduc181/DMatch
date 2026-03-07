@@ -23,9 +23,14 @@ public class CompanyController {
         @PreAuthorize("permitAll()")
     public ResponseEntity<ApiResponse<Page<CompanyResponse>>> getAllCompanies(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String location,
+            @RequestParam(name = "min_size", required = false) Integer minSize,
+            @RequestParam(name = "max_size", required = false) Integer maxSize
     ) {
-        Page<CompanyResponse> companies = companyService.getAllCompanies(page, limit);
+        Page<CompanyResponse> companies = companyService.getAllCompanies(
+                page, limit, keyword, location, minSize, maxSize);
         return ResponseEntity.ok().body(ApiResponse.<Page<CompanyResponse>>builder()
                 .message("Got companies successfully")
                 .data(companies)

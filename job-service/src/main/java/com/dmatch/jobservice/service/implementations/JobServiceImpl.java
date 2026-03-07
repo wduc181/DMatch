@@ -14,6 +14,7 @@ import com.dmatch.jobservice.commons.ApiResponse;
 import com.dmatch.jobservice.repositories.JobCategoryRepository;
 import com.dmatch.jobservice.repositories.JobLevelRepository;
 import com.dmatch.jobservice.repositories.JobRepository;
+import com.dmatch.jobservice.repositories.JobSpecification;
 import com.dmatch.jobservice.service.interfaces.JobService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +23,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -157,6 +159,12 @@ public class JobServiceImpl implements JobService {
     public JobResponse getJobById(Long id) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + id));
+
+        // Enrich with company info
+        CompanyResponse company = fetchCompanyQuietly(job.getCompanyId());
+        if (company != null) {
+            return JobResponse.fromJob(job, company.getName(), company.getLogoUrl());
+        }
         return JobResponse.fromJob(job);
     }
 
@@ -164,65 +172,26 @@ public class JobServiceImpl implements JobService {
     @Transactional(readOnly = true)
     public Page<JobResponse> getJobs(JobSearchRequest request, int page, int limit) {
         int pageNo = page < 1 ? 0 : page - 1;
-        Pageable pageable = PageRequest.of(pageNo, limit, Sort.by("createdAt").descending());
+        Sort sort = buildSort(request != null ? request.getSort() : null);
+        Pageable pageable = PageRequest.of(pageNo, limit, sort);
 
-        if (request == null) {
-            return jobRepository.findAll(pageable).map(JobResponse::fromJob);
-        }
+        // Build specification từ request
+        Specification<Job> spec = (request != null)
+                ? JobSpecification.fromSearchRequest(request)
+                : Specification.where(null);
 
-        if (request.getSalaryMin() != null || request.getSalaryMax() != null) {
-            throw new InvalidParamException("Filters salary_min/salary_max are not supported yet");
-        }
+        Page<Job> jobPage = jobRepository.findAll(spec, pageable);
 
-        if (request.getCompanyId() != null && request.getStatus() != null) {
-            return jobRepository.findByCompanyIdAndStatus(request.getCompanyId(), request.getStatus(), pageable)
-                    .map(JobResponse::fromJob);
-        }
+        // Batch fetch company info cho tất cả jobs trên page này
+        Map<Long, CompanyResponse> companyMap = batchFetchCompanies(jobPage.getContent());
 
-        if (request.getCompanyId() != null) {
-            return jobRepository.findByCompanyId(request.getCompanyId(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getStatus() != null) {
-            return jobRepository.findByStatus(request.getStatus(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getJobLevelId() != null) {
-            return jobRepository.findByJobLevel_Id(request.getJobLevelId(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-            return jobRepository.findDistinctByCategories_IdIn(request.getCategoryIds(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getJobType() != null && request.getLocation() != null) {
-            return jobRepository.findByJobTypeAndLocationContainingIgnoreCase(
-                    request.getJobType(),
-                    request.getLocation(),
-                    pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getJobType() != null) {
-            return jobRepository.findByJobType(request.getJobType(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getLocation() != null) {
-            return jobRepository.findByLocationContainingIgnoreCase(request.getLocation(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
-            return jobRepository.findByTitleContainingIgnoreCase(request.getKeyword(), pageable)
-                    .map(JobResponse::fromJob);
-        }
-
-        return jobRepository.findAll(pageable).map(JobResponse::fromJob);
+        return jobPage.map(job -> {
+            CompanyResponse company = companyMap.get(job.getCompanyId());
+            if (company != null) {
+                return JobResponse.fromJob(job, company.getName(), company.getLogoUrl());
+            }
+            return JobResponse.fromJob(job);
+        });
     }
 
     @Override
@@ -304,6 +273,73 @@ public class JobServiceImpl implements JobService {
         jobRepository.delete(job);
     }
 
+    // ===================== Helper methods =====================
+
+    /**
+     * Build Sort object từ sort param string.
+     * - "salary_desc" → salaryMax DESC
+     * - "salary_asc" → salaryMin ASC
+     * - default (null, "newest") → createdAt DESC
+     */
+    private Sort buildSort(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) {
+            return Sort.by("createdAt").descending();
+        }
+        return switch (sortParam) {
+            case "salary_desc" -> Sort.by("salaryMax").descending();
+            case "salary_asc" -> Sort.by("salaryMin").ascending();
+            default -> Sort.by("createdAt").descending();
+        };
+    }
+
+    /**
+     * Batch fetch company info cho danh sách jobs.
+     * Collect unique companyIds → 1 lần gọi Feign → map thành id → CompanyResponse.
+     */
+    private Map<Long, CompanyResponse> batchFetchCompanies(List<Job> jobs) {
+        Set<Long> companyIds = jobs.stream()
+                .map(Job::getCompanyId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (companyIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            ApiResponse<List<CompanyResponse>> response = companyClient
+                    .getCompaniesByIds(new ArrayList<>(companyIds))
+                    .getBody();
+
+            if (response != null && response.getData() != null) {
+                return response.getData().stream()
+                        .collect(Collectors.toMap(CompanyResponse::getId, Function.identity()));
+            }
+        } catch (Exception e) {
+            log.warn("Failed to batch fetch companies: {}", e.getMessage());
+        }
+
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Fetch single company info — dùng cho getJobById().
+     * Trả về null nếu company-service unavailable.
+     */
+    private CompanyResponse fetchCompanyQuietly(Long companyId) {
+        if (companyId == null)
+            return null;
+        try {
+            ApiResponse<CompanyResponse> response = companyClient.getCompanyById(companyId).getBody();
+            if (response != null) {
+                return response.getData();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch company id={}: {}", companyId, e.getMessage());
+        }
+        return null;
+    }
+
     private void validateJobOwnership(Job job, Long companyId) {
         if (job.getCompanyId() == null || !job.getCompanyId().equals(companyId)) {
             throw new InvalidParamException("company_id does not match job owner");
@@ -380,5 +416,20 @@ public class JobServiceImpl implements JobService {
                 .stream()
                 .map(JobCategoryResponse::fromJobCategory)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, Integer> countActiveJobsByCompanyIds(List<Long> companyIds) {
+        if (companyIds == null || companyIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Object[]> results = jobRepository.countByCompanyIdInAndStatus(companyIds, "ACTIVE");
+
+        return results.stream().collect(Collectors.toMap(
+                row -> (Long) row[0],
+                row -> ((Long) row[1]).intValue()
+        ));
     }
 }
