@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { getJobs, getJobById, getJobsByCompany, getJobLevels, getJobCategories } from '@/services/job.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getJobs, getJobById, getJobsByCompany, getJobLevels, getJobCategories, createJob, updateJob, deleteJob, changeJobStatus } from '@/services/job.service';
 
 /**
  * Hook lấy danh sách jobs với filter/sort/pagination.
@@ -72,5 +72,57 @@ export const useJobCategories = (options = {}) => {
           queryFn: () => getJobCategories().then((res) => res.data.data),
           staleTime: 1000 * 60 * 30,
           ...options,
+     });
+};
+
+/**
+ * Mutation: tạo job mới.
+ */
+export const useCreateJob = () => {
+     const queryClient = useQueryClient();
+     return useMutation({
+          mutationFn: ({ companyId, data }) => createJob(companyId, data).then((res) => res.data.data),
+          onSuccess: () => {
+               queryClient.invalidateQueries({ queryKey: ['jobs'] });
+          },
+     });
+};
+
+/**
+ * Mutation: cập nhật job.
+ */
+export const useUpdateJob = () => {
+     const queryClient = useQueryClient();
+     return useMutation({
+          mutationFn: ({ jobId, companyId, data }) => updateJob(jobId, companyId, data).then((res) => res.data.data),
+          onSuccess: () => {
+               queryClient.invalidateQueries({ queryKey: ['jobs'] });
+          },
+     });
+};
+
+/**
+ * Mutation: xóa job.
+ */
+export const useDeleteJob = () => {
+     const queryClient = useQueryClient();
+     return useMutation({
+          mutationFn: ({ jobId, companyId }) => deleteJob(jobId, companyId),
+          onSuccess: () => {
+               queryClient.invalidateQueries({ queryKey: ['jobs'] });
+          },
+     });
+};
+
+/**
+ * Mutation: thay đổi trạng thái job (DRAFT ↔ PUBLISHED).
+ */
+export const useChangeJobStatus = () => {
+     const queryClient = useQueryClient();
+     return useMutation({
+          mutationFn: ({ jobId, companyId, status }) => changeJobStatus(jobId, companyId, status).then((res) => res.data.data),
+          onSuccess: () => {
+               queryClient.invalidateQueries({ queryKey: ['jobs'] });
+          },
      });
 };

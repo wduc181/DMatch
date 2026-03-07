@@ -68,7 +68,7 @@ const AppRoutes = () => {
                     </Route>
 
                     {/* ===== D. Recruiter Routes - DashboardLayout + ProtectedRoute (role: COMPANY) ===== */}
-                    <Route element={<ProtectedRoute allowedRoles={['COMPANY']} />}>
+                    {/*<Route element={<ProtectedRoute allowedRoles={['COMPANY']} /> */}
                          <Route element={<DashboardLayout />}>
                               <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
                               <Route path="/recruiter/post-job" element={<PostJobPage />} />
@@ -76,7 +76,7 @@ const AppRoutes = () => {
                               <Route path="/recruiter/manage-candidates" element={<ManageCandidatesPage />} />
                               <Route path="/recruiter/company-profile" element={<CompanyProfileEditPage />} />
                          </Route>
-                    </Route>
+                    {/* </Route> */} 
 
                     {/* ===== E. Admin Routes - DashboardLayout + ProtectedRoute (role: ADMIN) ===== */}
                     <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
