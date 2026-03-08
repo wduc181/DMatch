@@ -21,6 +21,7 @@ import {
 import useAuthStore from '@/store/useAuthStore';
 import { useCompanyByOwner } from '@/hooks/useCompanies';
 import { useJobsByCompany, useDeleteJob, useChangeJobStatus } from '@/hooks/useJobs';
+import { SAMPLE_RECRUITER_COMPANY, SAMPLE_RECRUITER_JOBS } from '@/data/sampleData';
 
 // ==================== Helpers ====================
 const formatSalary = (value) => {
@@ -60,7 +61,7 @@ const ManageJobsPage = () => {
 
      // Fetch company by owner
      const {
-          data: company,
+          data: apiCompany,
           isLoading: isLoadingCompany,
      } = useCompanyByOwner(user?.id);
 
@@ -69,10 +70,13 @@ const ManageJobsPage = () => {
           data: jobsData,
           isLoading: isLoadingJobs,
           refetch: refetchJobs,
-     } = useJobsByCompany(company?.id, { limit: 100 });
+     } = useJobsByCompany(apiCompany?.id, { limit: 100 });
 
      const deleteJobMutation = useDeleteJob();
      const changeStatusMutation = useChangeJobStatus();
+
+     // Sample data fallback
+     const company = apiCompany || SAMPLE_RECRUITER_COMPANY;
 
      // Auto-hide toast
      useEffect(() => {
@@ -82,7 +86,7 @@ const ManageJobsPage = () => {
           }
      }, [toast]);
 
-     const jobs = jobsData?.content || jobsData || [];
+     const jobs = (jobsData?.content || jobsData) || SAMPLE_RECRUITER_JOBS;
      const filteredJobs = jobs.filter((job) =>
           job.title?.toLowerCase().includes(searchTerm.toLowerCase()),
      );
@@ -124,34 +128,14 @@ const ManageJobsPage = () => {
           }
      };
 
-     // Loading state
-     if (isLoadingCompany || isLoadingJobs) {
+     // Loading state (chỉ show khi có API data thật)
+     if (apiCompany && (isLoadingCompany || isLoadingJobs)) {
           return (
                <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
                          <div className="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                          <p className="text-sm text-muted-foreground">Đang tải danh sách việc làm...</p>
                     </div>
-               </div>
-          );
-     }
-
-     // No company yet
-     if (!company) {
-          return (
-               <div className="min-h-[60vh] flex items-center justify-center">
-                    <Card className="max-w-md w-full text-center">
-                         <CardContent className="pt-8 pb-6 flex flex-col items-center gap-4">
-                              <Briefcase size={48} className="text-muted-foreground" />
-                              <h2 className="text-lg font-semibold">Chưa có hồ sơ công ty</h2>
-                              <p className="text-sm text-muted-foreground">
-                                   Vui lòng tạo hồ sơ công ty trước khi quản lý tin tuyển dụng.
-                              </p>
-                              <Button asChild>
-                                   <Link to="/recruiter/company-profile">Tạo hồ sơ công ty</Link>
-                              </Button>
-                         </CardContent>
-                    </Card>
                </div>
           );
      }

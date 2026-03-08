@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import useAuthStore from '@/store/useAuthStore';
 import { getCompanyByOwnerId, createCompany, updateCompany } from '@/services/company.service';
+import { SAMPLE_RECRUITER_COMPANY } from '@/data/sampleData';
 
 // ==================== Zod Schema ====================
 const companySchema = z.object({
@@ -99,7 +100,18 @@ const CompanyProfileEditPage = () => {
                     if (err.response?.status === 404) {
                          setIsNewCompany(true);
                     } else {
-                         console.error('Failed to fetch company:', err);
+                         // API không khả dụng → dùng sample data để test UI
+                         const sample = SAMPLE_RECRUITER_COMPANY;
+                         form.reset({
+                              name: sample.name || '',
+                              industry: sample.industry || '',
+                              employee_size: sample.employee_size ?? sample.employeeSize ?? '',
+                              address: sample.address || '',
+                              website: sample.website || '',
+                              description: sample.description || '',
+                              logo_key: sample.logo_key ?? sample.logoKey ?? '',
+                              cover_key: sample.cover_key ?? sample.coverKey ?? '',
+                         });
                     }
                } finally {
                     setIsLoading(false);

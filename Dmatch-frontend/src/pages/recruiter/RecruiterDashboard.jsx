@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import useAuthStore from '@/store/useAuthStore';
 import { useCompanyByOwner } from '@/hooks/useCompanies';
 import { useJobsByCompany } from '@/hooks/useJobs';
+import { SAMPLE_RECRUITER_COMPANY, SAMPLE_RECRUITER_JOBS } from '@/data/sampleData';
 
 // ==================== Helpers ====================
 const formatDate = (dateStr) => {
@@ -41,16 +42,18 @@ const RecruiterDashboard = () => {
      const user = useAuthStore((s) => s.user);
 
      const {
-          data: company,
+          data: apiCompany,
           isLoading: isLoadingCompany,
      } = useCompanyByOwner(user?.id);
 
      const {
           data: jobsData,
           isLoading: isLoadingJobs,
-     } = useJobsByCompany(company?.id, { limit: 100 });
+     } = useJobsByCompany(apiCompany?.id, { limit: 100 });
 
-     const isLoading = isLoadingCompany || isLoadingJobs;
+     // Sample data fallback: nếu API chưa trả dữ liệu → dùng sample để test UI
+     const company = apiCompany || SAMPLE_RECRUITER_COMPANY;
+     const isLoading = apiCompany ? (isLoadingCompany || isLoadingJobs) : false;
 
      if (isLoading) {
           return (
@@ -63,33 +66,8 @@ const RecruiterDashboard = () => {
           );
      }
 
-     // No company yet → prompt to create
-     if (!company) {
-          return (
-               <div className="min-h-[60vh] flex items-center justify-center">
-                    <Card className="max-w-lg w-full">
-                         <CardContent className="pt-8 pb-6 flex flex-col items-center gap-4 text-center">
-                              <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-                                   <Building2 size={32} className="text-primary" />
-                              </div>
-                              <h2 className="text-xl font-semibold">Chào mừng đến với DMatch!</h2>
-                              <p className="text-sm text-muted-foreground max-w-sm">
-                                   Để bắt đầu đăng tin tuyển dụng, hãy tạo hồ sơ công ty trước nhé.
-                              </p>
-                              <Button asChild className="gap-2">
-                                   <Link to="/recruiter/company-profile">
-                                        <Building2 size={16} />
-                                        Tạo hồ sơ công ty
-                                   </Link>
-                              </Button>
-                         </CardContent>
-                    </Card>
-               </div>
-          );
-     }
-
      // Compute stats
-     const jobs = jobsData?.content || jobsData || [];
+     const jobs = (jobsData?.content || jobsData) || SAMPLE_RECRUITER_JOBS;
      const publishedJobs = jobs.filter((j) => j.status === 'PUBLISHED');
      const draftJobs = jobs.filter((j) => j.status === 'DRAFT');
      const recentJobs = [...jobs]
