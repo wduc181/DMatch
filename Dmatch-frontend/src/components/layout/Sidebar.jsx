@@ -4,13 +4,15 @@ import {
      Building2,
      Briefcase,
      Users,
+     ShieldCheck,
      ChevronLeft,
      ChevronRight,
      Menu,
 } from 'lucide-react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import useAuthStore from '@/store/useAuthStore';
 import {
      Sheet,
      SheetContent,
@@ -51,12 +53,17 @@ const ADMIN_NAV = [
           path: '/admin/users',
           icon: Users,
      },
+     {
+          label: 'Kiểm duyệt việc làm',
+          path: '/admin/jobs',
+          icon: ShieldCheck,
+     },
 ];
 
 const SidebarNavItems = ({ items, collapsed }) => {
      return (
           <nav className="flex flex-col gap-1 px-3">
-               {items.map(({ label, path, icon: Icon }) => (
+               {items.map(({ label, path, icon }) => (
                     <NavLink
                          key={path}
                          to={path}
@@ -71,7 +78,7 @@ const SidebarNavItems = ({ items, collapsed }) => {
                          }
                          title={collapsed ? label : undefined}
                     >
-                         <Icon size={20} className="shrink-0" />
+                         {createElement(icon, { size: 20, className: 'shrink-0' })}
                          {!collapsed && <span>{label}</span>}
                     </NavLink>
                ))}
@@ -119,9 +126,25 @@ const SidebarContent = ({ items, collapsed, onToggle }) => (
 const Sidebar = () => {
      const [collapsed, setCollapsed] = useState(false);
      const location = useLocation();
+     const roles = useAuthStore((state) => state.user?.roles || []);
 
-     const isAdmin = location.pathname.startsWith('/admin');
-     const navItems = isAdmin ? ADMIN_NAV : RECRUITER_NAV;
+     const hasAdminRole = roles.includes('ADMIN');
+     const hasCompanyRole = roles.includes('COMPANY');
+     const isAdminRoute = location.pathname.startsWith('/admin');
+     const isRecruiterRoute = location.pathname.startsWith('/recruiter');
+
+     let navItems = [];
+     if (hasAdminRole && isAdminRoute) {
+          navItems = ADMIN_NAV;
+     } else if (hasCompanyRole) {
+          navItems = RECRUITER_NAV;
+     } else if (hasAdminRole) {
+          navItems = ADMIN_NAV;
+     } else if (isAdminRoute) {
+          navItems = ADMIN_NAV;
+     } else if (isRecruiterRoute) {
+          navItems = RECRUITER_NAV;
+     }
 
      return (
           <>

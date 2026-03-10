@@ -34,6 +34,7 @@ import CompanyProfileEditPage from '../pages/recruiter/CompanyProfileEditPage';
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import UserManagementPage from '../pages/admin/UserManagementPage';
+import JobModerationPage from '../pages/admin/JobModerationPage';
 
 // Not Found
 import NotFoundPage from '../pages/NotFoundPage';
@@ -68,7 +69,7 @@ const AppRoutes = () => {
                     </Route>
 
                     {/* ===== D. Recruiter Routes - DashboardLayout + ProtectedRoute (role: COMPANY) ===== */}
-                    {/*<Route element={<ProtectedRoute allowedRoles={['COMPANY']} /> */}
+                    {/* <Route element={<ProtectedRoute allowedRoles={['COMPANY']} />}> */}
                          <Route element={<DashboardLayout />}>
                               <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
                               <Route path="/recruiter/post-job" element={<PostJobPage />} />
@@ -76,15 +77,16 @@ const AppRoutes = () => {
                               <Route path="/recruiter/manage-candidates" element={<ManageCandidatesPage />} />
                               <Route path="/recruiter/company-profile" element={<CompanyProfileEditPage />} />
                          </Route>
-                    {/* </Route> */} 
+                    {/* </Route> */}
 
                     {/* ===== E. Admin Routes - DashboardLayout + ProtectedRoute (role: ADMIN) ===== */}
-                    <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+                    {/* <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}> */}
                          <Route element={<DashboardLayout />}>
                               <Route path="/admin/dashboard" element={<AdminDashboard />} />
                               <Route path="/admin/users" element={<UserManagementPage />} />
+                              <Route path="/admin/jobs" element={<JobModerationPage />} />
                          </Route>
-                    </Route>
+                    {/* </Route> */}
 
                     {/* ===== 403 Forbidden ===== */}
                     <Route path="/403" element={<ForbiddenPage />} />

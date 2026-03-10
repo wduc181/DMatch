@@ -10,6 +10,7 @@ const BREADCRUMB_MAP = {
      '/recruiter/manage-candidates': 'Quản lý ứng viên',
      '/admin/dashboard': 'Tổng quan',
      '/admin/users': 'Quản lý người dùng',
+     '/admin/jobs': 'Kiểm duyệt việc làm',
 };
 
 const DashboardTopbar = () => {

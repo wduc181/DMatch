@@ -759,6 +759,124 @@ export const SAMPLE_APPLICATIONS = [
 ];
 
 // ====================================================================
+// ADMIN SAMPLE DATA — Góc nhìn quản trị hệ thống
+// TODO: Xóa khi admin frontend nối backend thật
+// ====================================================================
+
+export const SAMPLE_ADMIN_USERS = [
+     {
+          id: 101,
+          fullName: 'Nguyễn Minh Quân',
+          email: 'quan.nguyen@dmatch.dev',
+          status: 'ACTIVE',
+          roles: ['ADMIN'],
+          createdAt: '2026-01-05T09:00:00',
+     },
+     {
+          id: 102,
+          fullName: 'Trần Thu Hà',
+          email: 'ha.tran@candidate.vn',
+          status: 'ACTIVE',
+          roles: ['USER'],
+          createdAt: '2026-02-12T08:30:00',
+     },
+     {
+          id: 103,
+          fullName: 'Lê Quốc Bảo',
+          email: 'bao.le@company.vn',
+          status: 'ACTIVE',
+          roles: ['COMPANY'],
+          createdAt: '2026-01-15T10:45:00',
+     },
+     {
+          id: 104,
+          fullName: 'Phạm Mỹ Duyên',
+          email: 'duyen.pham@candidate.vn',
+          status: 'BANNED',
+          roles: ['USER'],
+          createdAt: '2026-02-20T14:15:00',
+     },
+     {
+          id: 105,
+          fullName: 'Đỗ Gia Hưng',
+          email: 'hung.do@recruiter.vn',
+          status: 'ACTIVE',
+          roles: ['USER', 'COMPANY'],
+          createdAt: '2026-01-22T16:20:00',
+     },
+     {
+          id: 106,
+          fullName: 'Võ Thanh Tâm',
+          email: 'tam.vo@candidate.vn',
+          status: 'ACTIVE',
+          roles: ['USER'],
+          createdAt: '2026-03-01T09:40:00',
+     },
+     {
+          id: 107,
+          fullName: 'Bùi Nhật Anh',
+          email: 'anh.bui@company.vn',
+          status: 'BANNED',
+          roles: ['COMPANY'],
+          createdAt: '2026-02-03T11:10:00',
+     },
+     {
+          id: 108,
+          fullName: 'Hoàng Kim Ngân',
+          email: 'ngan.hoang@candidate.vn',
+          status: 'ACTIVE',
+          roles: ['USER'],
+          createdAt: '2026-03-04T13:55:00',
+     },
+     {
+          id: 109,
+          fullName: 'Phan Đức Long',
+          email: 'long.phan@operations.vn',
+          status: 'ACTIVE',
+          roles: ['ADMIN'],
+          createdAt: '2025-12-28T08:00:00',
+     },
+     {
+          id: 110,
+          fullName: 'Ngô Khánh Linh',
+          email: 'linh.ngo@company.vn',
+          status: 'ACTIVE',
+          roles: ['COMPANY'],
+          createdAt: '2026-02-26T10:05:00',
+     },
+];
+
+export const SAMPLE_ADMIN_PENDING_JOBS = [
+     {
+          id: 9001,
+          title: 'Senior Platform Engineer',
+          companyName: 'TechVN Corp',
+          location: 'Hồ Chí Minh',
+          reportedReason: 'Nội dung cần kiểm tra lại mức lương và mô tả',
+          moderationStatus: 'PENDING_REVIEW',
+          createdAt: '2026-03-08T09:30:00',
+     },
+     {
+          id: 9002,
+          title: 'Sales Executive',
+          companyName: 'DigitalX',
+          location: 'Hà Nội',
+          reportedReason: 'Người dùng báo cáo tin tuyển dụng sai chuyên mục',
+          moderationStatus: 'PENDING_REVIEW',
+          createdAt: '2026-03-09T11:00:00',
+     },
+     {
+          id: 9003,
+          title: 'Intern Product Designer',
+          companyName: 'AppStudio',
+          location: 'Đà Nẵng',
+          reportedReason: 'Chờ admin kiểm tra tiêu đề và yêu cầu công việc',
+          moderationStatus: 'ESCALATED',
+          createdAt: '2026-03-09T15:45:00',
+     },
+];
+
+// ====================================================================
 // CANDIDATE SAMPLE DATA — Góc nhìn ứng viên (Candidate Applied Jobs)
 // TODO: Xóa khi backend Apply Job API hoạt động
 // ====================================================================
