@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
      Briefcase, Eye, FileText, Building2, ArrowRight,
-     TrendingUp, Clock, AlertCircle,
+     TrendingUp, Clock, AlertCircle, Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import useAuthStore from '@/store/useAuthStore';
 import { useCompanyByOwner } from '@/hooks/useCompanies';
 import { useJobsByCompany } from '@/hooks/useJobs';
-import { SAMPLE_RECRUITER_COMPANY, SAMPLE_RECRUITER_JOBS } from '@/data/sampleData';
 
 // ==================== Helpers ====================
 const formatDate = (dateStr) => {
@@ -42,36 +41,62 @@ const RecruiterDashboard = () => {
      const user = useAuthStore((s) => s.user);
 
      const {
-          data: apiCompany,
+          data: company,
           isLoading: isLoadingCompany,
+          isError: isCompanyError,
      } = useCompanyByOwner(user?.id);
 
      const {
           data: jobsData,
           isLoading: isLoadingJobs,
-     } = useJobsByCompany(apiCompany?.id, { limit: 100 });
+     } = useJobsByCompany(company?.id, { limit: 100 });
 
-     // Sample data fallback: nếu API chưa trả dữ liệu → dùng sample để test UI
-     const company = apiCompany || SAMPLE_RECRUITER_COMPANY;
-     const isLoading = apiCompany ? (isLoadingCompany || isLoadingJobs) : false;
+     const isLoading = isLoadingCompany || (company && isLoadingJobs);
 
      if (isLoading) {
           return (
                <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
-                         <div className="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                         <Loader2 size={32} className="animate-spin text-primary" />
                          <p className="text-sm text-muted-foreground">Đang tải dữ liệu...</p>
                     </div>
                </div>
           );
      }
 
+     // Chưa có company - hiển thị hướng dẫn tạo company
+     if (isCompanyError || !company) {
+          return (
+               <div className="min-h-[60vh] flex items-center justify-center">
+                    <Card className="max-w-md w-full">
+                         <CardContent className="pt-6 text-center">
+                              <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                   <Building2 size={32} className="text-primary" />
+                              </div>
+                              <h2 className="text-xl font-bold text-foreground mb-2">
+                                   Chưa có hồ sơ công ty
+                              </h2>
+                              <p className="text-sm text-muted-foreground mb-6">
+                                   Bạn cần tạo hồ sơ công ty trước khi có thể đăng tin tuyển dụng và quản lý ứng viên.
+                              </p>
+                              <Button asChild>
+                                   <Link to="/recruiter/company-profile">
+                                        <Building2 size={16} />
+                                        Tạo hồ sơ công ty
+                                   </Link>
+                              </Button>
+                         </CardContent>
+                    </Card>
+               </div>
+          );
+     }
+
      // Compute stats
-     const jobs = (jobsData?.content || jobsData) || SAMPLE_RECRUITER_JOBS;
-     const publishedJobs = jobs.filter((j) => j.status === 'PUBLISHED');
+     const jobs = jobsData?.content || [];
+     const publishedJobs = jobs.filter((j) => j.status === 'PUBLISHED' || j.status === 'ACTIVE');
      const draftJobs = jobs.filter((j) => j.status === 'DRAFT');
      const recentJobs = [...jobs]
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           .slice(0, 5);
 
      return (
@@ -79,7 +104,7 @@ const RecruiterDashboard = () => {
                {/* Header */}
                <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                         Xin chào, {user?.fullName || 'Nhà tuyển dụng'}! 👋
+                         Xin chào, {user?.fullName || 'Nhà tuyển dụng'}!
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">
                          Tổng quan hoạt động tuyển dụng của <span className="font-medium text-foreground">{company.name}</span>
@@ -153,7 +178,7 @@ const RecruiterDashboard = () => {
                                                        <div className="flex items-center gap-2 mt-1">
                                                             <span className="text-xs text-muted-foreground flex items-center gap-1">
                                                                  <Clock size={12} />
-                                                                 {formatDate(job.createdAt)}
+                                                                 {formatDate(job.created_at)}
                                                             </span>
                                                             {job.location && (
                                                                  <span className="text-xs text-muted-foreground">
@@ -163,10 +188,10 @@ const RecruiterDashboard = () => {
                                                        </div>
                                                   </div>
                                                   <Badge
-                                                       variant={job.status === 'PUBLISHED' ? 'default' : 'secondary'}
+                                                       variant={job.status === 'PUBLISHED' || job.status === 'ACTIVE' ? 'default' : 'secondary'}
                                                        className="ml-3 shrink-0"
                                                   >
-                                                       {job.status === 'PUBLISHED' ? 'Đang hiển thị' : 'Nháp'}
+                                                       {job.status === 'PUBLISHED' || job.status === 'ACTIVE' ? 'Đang hiển thị' : 'Nháp'}
                                                   </Badge>
                                              </div>
                                         ))}

@@ -37,12 +37,6 @@ import {
      useCreateJob,
      useUpdateJob,
 } from '@/hooks/useJobs';
-import {
-     SAMPLE_RECRUITER_COMPANY,
-     SAMPLE_RECRUITER_JOBS,
-     SAMPLE_JOB_LEVELS,
-     SAMPLE_JOB_CATEGORIES,
-} from '@/data/sampleData';
 
 // ==================== Constants ====================
 const JOB_TYPES = [
@@ -99,15 +93,8 @@ const PostJobPage = () => {
      const { data: existingJob, isLoading: isLoadingJob } = useJob(editJobId);
 
      // Fetch reference data
-     const { data: apiJobLevels = [] } = useJobLevels();
-     const { data: apiJobCategories = [] } = useJobCategories();
-
-     // Sample data fallback
-     const company = apiCompany || SAMPLE_RECRUITER_COMPANY;
-     const jobLevels = apiJobLevels.length > 0 ? apiJobLevels : SAMPLE_JOB_LEVELS;
-     const jobCategories = apiJobCategories.length > 0 ? apiJobCategories : SAMPLE_JOB_CATEGORIES;
-     // Khi edit mode và API chưa có, fallback sample job
-     const sampleEditJob = isEditMode ? SAMPLE_RECRUITER_JOBS.find((j) => j.id === Number(editJobId)) : null;
+     const { data: jobLevels = [], isLoading: isLoadingLevels } = useJobLevels();
+     const { data: jobCategories = [], isLoading: isLoadingCategories } = useJobCategories();
 
      // Mutations
      const createJobMutation = useCreateJob();
@@ -132,22 +119,21 @@ const PostJobPage = () => {
 
      // Pre-fill form when editing
      useEffect(() => {
-          const jobToEdit = existingJob || sampleEditJob;
-          if (isEditMode && jobToEdit) {
+          if (isEditMode && existingJob) {
                form.reset({
-                    title: jobToEdit.title || '',
-                    description: jobToEdit.description || '',
-                    requirements: jobToEdit.requirements || '',
-                    location: jobToEdit.location || '',
-                    job_type: jobToEdit.jobType || jobToEdit.job_type || '',
-                    salary_min: jobToEdit.salaryMin ?? jobToEdit.salary_min ?? '',
-                    salary_max: jobToEdit.salaryMax ?? jobToEdit.salary_max ?? '',
-                    currency: jobToEdit.currency || 'VND',
-                    job_level_id: (jobToEdit.jobLevel?.id || jobToEdit.job_level?.id)?.toString() || '',
-                    category_ids: jobToEdit.categories?.map((c) => c.id) || [],
+                    title: existingJob.title || '',
+                    description: existingJob.description || '',
+                    requirements: existingJob.requirements || '',
+                    location: existingJob.location || '',
+                    job_type: existingJob.job_type || '',
+                    salary_min: existingJob.salary_min ?? '',
+                    salary_max: existingJob.salary_max ?? '',
+                    currency: existingJob.currency || 'VND',
+                    job_level_id: existingJob.job_level?.id?.toString() || '',
+                    category_ids: existingJob.categories?.map((c) => c.id) || [],
                });
           }
-     }, [isEditMode, existingJob, sampleEditJob]); // eslint-disable-line react-hooks/exhaustive-deps
+     }, [isEditMode, existingJob]); // eslint-disable-line react-hooks/exhaustive-deps
 
      // Auto-hide toast
      useEffect(() => {
@@ -177,13 +163,13 @@ const PostJobPage = () => {
                if (isEditMode) {
                     await updateJobMutation.mutateAsync({
                          jobId: editJobId,
-                         companyId: company.id,
+                         companyId: apiCompany.id,
                          data: payload,
                     });
                     setToast({ type: 'success', message: 'Cập nhật tin tuyển dụng thành công!' });
                } else {
                     await createJobMutation.mutateAsync({
-                         companyId: company.id,
+                         companyId: apiCompany.id,
                          data: payload,
                     });
                     setToast({ type: 'success', message: 'Tạo tin tuyển dụng thành công!' });
@@ -197,8 +183,8 @@ const PostJobPage = () => {
           }
      };
 
-     // Loading (chỉ khi có API thật)
-     if (apiCompany && (isLoadingCompany || (isEditMode && isLoadingJob))) {
+     // Loading
+     if (isLoadingCompany || isLoadingLevels || isLoadingCategories || (isEditMode && isLoadingJob)) {
           return (
                <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
@@ -211,8 +197,8 @@ const PostJobPage = () => {
           );
      }
 
-     // No company (chỉ khi API trả về rõ ràng không có)
-     if (apiCompany === null) {
+     // No company
+     if (!apiCompany) {
           return (
                <div className="min-h-[60vh] flex items-center justify-center">
                     <Card className="max-w-md w-full text-center">

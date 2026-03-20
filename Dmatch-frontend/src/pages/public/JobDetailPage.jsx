@@ -12,14 +12,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { useJob } from '@/hooks/useJobs';
 import { useCompany } from '@/hooks/useCompanies';
 import JobCompanySidebar from '@/features/jobs/components/JobCompanySidebar';
 import ApplyJobDialog from '@/features/jobs/components/ApplyJobDialog';
-
-// ==================== SAMPLE DATA FALLBACK (xóa khi kết nối API thật) ====================
-import { SAMPLE_JOBS, SAMPLE_COMPANIES } from '@/data/sampleData';
 
 /**
  * Formats salary range to human-readable string.
@@ -65,31 +61,21 @@ const JobDetailPage = () => {
      const { id } = useParams();
      const [applyOpen, setApplyOpen] = useState(false);
 
-     // ==================== SAMPLE DATA FALLBACK ====================
-     const sampleJob = SAMPLE_JOBS.find((j) => j.id === Number(id));
-     const sampleCompany = sampleJob
-          ? SAMPLE_COMPANIES.find((c) => c.id === sampleJob.company_id)
-          : null;
-
-     // Fetch job detail — fallback sample data khi API chưa sẵn sàng
+     // Fetch job detail từ API
      const {
-          data: apiJob,
+          data: job,
           isLoading: isJobLoading,
-     } = useJob(id, { retry: false });
-
-     // Ưu tiên API data, fallback sang sample data
-     const job = apiJob ?? sampleJob;
+          isError: isJobError,
+     } = useJob(id);
 
      // Fetch company info (Microservices pattern: gọi sang company-service)
      const {
-          data: apiCompany,
+          data: company,
           isLoading: isCompanyLoading,
-     } = useCompany(job?.company_id, { retry: false });
-
-     const company = apiCompany ?? sampleCompany;
+     } = useCompany(job?.company_id);
 
      // Loading state
-     if (isJobLoading && !job) {
+     if (isJobLoading) {
           return (
                <div className="flex items-center justify-center min-h-[60vh]">
                     <Loader2 size={32} className="animate-spin text-primary" />
@@ -97,8 +83,8 @@ const JobDetailPage = () => {
           );
      }
 
-     // Not found
-     if (!isJobLoading && !job) {
+     // Not found or error
+     if (isJobError || !job) {
           return (
                <div className="max-w-3xl mx-auto px-4 py-20 text-center">
                     <div className="inline-flex items-center justify-center size-16 rounded-full bg-muted mb-4">
@@ -124,7 +110,7 @@ const JobDetailPage = () => {
 
      return (
           <>
-               {/* ===== Phase 2: Job Header Section ===== */}
+               {/* ===== Job Header Section ===== */}
                <section className="bg-muted/50 border-b border-border">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                          {/* Breadcrumb-style back link */}
@@ -203,7 +189,7 @@ const JobDetailPage = () => {
                     </div>
                </section>
 
-               {/* ===== Phase 3 & 4: Main Content + Sidebar ===== */}
+               {/* ===== Main Content + Sidebar ===== */}
                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                          {/* Cột trái — Nội dung chính (70%) */}
@@ -287,13 +273,13 @@ const JobDetailPage = () => {
                               <JobCompanySidebar
                                    company={company}
                                    job={job}
-                                   isLoading={isCompanyLoading && !company}
+                                   isLoading={isCompanyLoading}
                               />
                          </div>
                     </div>
                </section>
 
-               {/* ===== Phase 5: Apply Dialog ===== */}
+               {/* ===== Apply Dialog ===== */}
                <ApplyJobDialog
                     open={applyOpen}
                     onOpenChange={setApplyOpen}

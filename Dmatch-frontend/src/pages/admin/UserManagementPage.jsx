@@ -1,5 +1,5 @@
 import { useDeferredValue, useMemo, useState } from 'react';
-import { AlertCircle, CheckCircle2, Search, ShieldAlert, Users } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Search, ShieldAlert, Users } from 'lucide-react';
 import {
      AlertDialog,
      AlertDialogAction,
@@ -38,7 +38,7 @@ import {
 import UserActionMenu from '@/features/admin/components/UserActionMenu';
 import UserRolesList from '@/features/admin/components/UserRolesList';
 import UserStatusBadge from '@/features/admin/components/UserStatusBadge';
-import { SAMPLE_ADMIN_USERS } from '@/data/sampleData';
+import { useAdminUsers, useToggleAdminUserStatus } from '@/hooks/useAdminUsers';
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('vi-VN', {
      day: '2-digit',
@@ -68,11 +68,17 @@ const UserManagementPage = () => {
      const [searchValue, setSearchValue] = useState('');
      const [roleFilter, setRoleFilter] = useState('ALL');
      const [statusFilter, setStatusFilter] = useState('ALL');
-     const [users, setUsers] = useState(SAMPLE_ADMIN_USERS);
      const [selectedUser, setSelectedUser] = useState(null);
      const [confirmTarget, setConfirmTarget] = useState(null);
      const [feedback, setFeedback] = useState(null);
      const deferredSearch = useDeferredValue(searchValue);
+
+     // Fetch users từ API
+     const { data: usersResponse, isLoading, isError, refetch } = useAdminUsers();
+     const users = usersResponse?.data?.content || [];
+
+     // Toggle status mutation
+     const toggleStatusMutation = useToggleAdminUserStatus();
 
      const filteredUsers = useMemo(() => {
           const keyword = deferredSearch.trim().toLowerCase();
@@ -81,43 +87,30 @@ const UserManagementPage = () => {
                .filter((user) => {
                     const matchesKeyword = !keyword
                          || user.email?.toLowerCase().includes(keyword)
-                         || user.fullName?.toLowerCase().includes(keyword);
+                         || user.full_name?.toLowerCase().includes(keyword);
 
                     const matchesRole = roleFilter === 'ALL' || user.roles?.includes(roleFilter);
                     const matchesStatus = statusFilter === 'ALL' || user.status === statusFilter;
 
                     return matchesKeyword && matchesRole && matchesStatus;
                })
-               .sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0));
+               .sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0));
      }, [users, deferredSearch, roleFilter, statusFilter]);
 
      const handleToggleStatus = async () => {
           if (!confirmTarget) return;
 
           try {
-               const updatedUsers = users.map((user) => {
-                    if (user.id !== confirmTarget.id) return user;
-
-                    return {
-                         ...user,
-                         status: user.status === 'BANNED' ? 'ACTIVE' : 'BANNED',
-                    };
-               });
-
-               const updatedUser = updatedUsers.find((user) => user.id === confirmTarget.id);
-               setUsers(updatedUsers);
-               const isBanned = updatedUser?.status === 'BANNED';
-
+               await toggleStatusMutation.mutateAsync(confirmTarget.id);
+               const isBanned = confirmTarget.status === 'ACTIVE';
                setFeedback({
                     type: 'success',
                     message: isBanned
-                         ? `Đã khóa tài khoản ${updatedUser?.email}`
-                         : `Đã mở khóa tài khoản ${updatedUser?.email}`,
+                         ? `Đã khóa tài khoản ${confirmTarget.email}`
+                         : `Đã mở khóa tài khoản ${confirmTarget.email}`,
                });
                setConfirmTarget(null);
-               if (selectedUser?.id === updatedUser.id) {
-                    setSelectedUser(updatedUser);
-               }
+               setSelectedUser(null);
           } catch {
                setFeedback({
                     type: 'error',
@@ -127,12 +120,36 @@ const UserManagementPage = () => {
           }
      };
 
+     if (isLoading) {
+          return (
+               <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                         <Loader2 size={32} className="animate-spin text-primary" />
+                         <p className="text-sm text-muted-foreground">Đang tải danh sách người dùng...</p>
+                    </div>
+               </div>
+          );
+     }
+
+     if (isError) {
+          return (
+               <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="text-center">
+                         <p className="text-destructive">Có lỗi xảy ra khi tải dữ liệu.</p>
+                         <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+                              Thử lại
+                         </Button>
+                    </div>
+               </div>
+          );
+     }
+
      return (
           <div className="space-y-6">
                <div>
                     <h1 className="text-2xl font-bold text-foreground">Quản lý người dùng</h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                         Trang này đang dùng sample data cục bộ để bạn test UI trước khi nối API admin của user-service.
+                         Quản lý tài khoản người dùng trên hệ thống DMatch.
                     </p>
                </div>
 
@@ -225,7 +242,7 @@ const UserManagementPage = () => {
                                                   <TableCell className="font-medium text-foreground">#{user.id}</TableCell>
                                                   <TableCell>
                                                        <div>
-                                                            <p className="font-medium text-foreground">{user.fullName || 'Chưa cập nhật'}</p>
+                                                            <p className="font-medium text-foreground">{user.full_name || 'Chưa cập nhật'}</p>
                                                        </div>
                                                   </TableCell>
                                                   <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
@@ -236,14 +253,14 @@ const UserManagementPage = () => {
                                                        <UserStatusBadge status={user.status} />
                                                   </TableCell>
                                                   <TableCell className="text-sm text-muted-foreground">
-                                                       {formatDate(user.createdAt)}
+                                                       {formatDate(user.created_at)}
                                                   </TableCell>
                                                   <TableCell>
                                                        <UserActionMenu
                                                             user={user}
                                                             onViewDetails={setSelectedUser}
                                                             onToggleStatus={setConfirmTarget}
-                                                            disabled={false}
+                                                            disabled={toggleStatusMutation.isPending}
                                                        />
                                                   </TableCell>
                                              </TableRow>
@@ -259,14 +276,14 @@ const UserManagementPage = () => {
                          <DialogHeader>
                               <DialogTitle>Chi tiết người dùng</DialogTitle>
                               <DialogDescription>
-                                   Thông tin chi tiết tài khoản đang được trả về từ UserResponse của user-service.
+                                   Thông tin chi tiết tài khoản.
                               </DialogDescription>
                          </DialogHeader>
                          {selectedUser && (
                               <div className="space-y-4 text-sm">
                                    <div className="rounded-xl border bg-muted/30 p-4">
                                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Họ và tên</p>
-                                        <p className="mt-1 text-base font-semibold text-foreground">{selectedUser.fullName || 'Chưa cập nhật'}</p>
+                                        <p className="mt-1 text-base font-semibold text-foreground">{selectedUser.full_name || 'Chưa cập nhật'}</p>
                                    </div>
 
                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -276,7 +293,7 @@ const UserManagementPage = () => {
                                         </div>
                                         <div className="rounded-xl border p-4">
                                              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ngày tạo</p>
-                                             <p className="mt-1 text-foreground">{formatDate(selectedUser.createdAt)}</p>
+                                             <p className="mt-1 text-foreground">{formatDate(selectedUser.created_at)}</p>
                                         </div>
                                    </div>
 
@@ -325,11 +342,15 @@ const UserManagementPage = () => {
                               </AlertDialogDescription>
                          </AlertDialogHeader>
                          <AlertDialogFooter>
-                              <AlertDialogCancel>Hủy</AlertDialogCancel>
+                              <AlertDialogCancel disabled={toggleStatusMutation.isPending}>Hủy</AlertDialogCancel>
                               <AlertDialogAction
                                    onClick={handleToggleStatus}
                                    className="bg-destructive text-white hover:bg-destructive/90"
+                                   disabled={toggleStatusMutation.isPending}
                               >
+                                   {toggleStatusMutation.isPending ? (
+                                        <Loader2 size={14} className="animate-spin mr-2" />
+                                   ) : null}
                                    Xác nhận
                               </AlertDialogAction>
                          </AlertDialogFooter>

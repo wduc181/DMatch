@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Building2, Sparkles } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Building2, Loader2 } from 'lucide-react';
 import CompanyCard from '@/features/companies/components/CompanyCard';
 import CompanyFilterBar from '@/features/companies/components/CompanyFilterBar';
 import {
@@ -11,95 +13,110 @@ import {
      PaginationPrevious,
      PaginationEllipsis,
 } from '@/components/ui/pagination';
-import { SAMPLE_COMPANIES, COMPANY_SIZES } from '@/data/sampleData';
+import { getCompanies } from '@/services/company.service';
 
 const ITEMS_PER_PAGE = 8;
 
 /**
- * Kiểm tra address có match với filter location không.
- * Location filter value: 'ho-chi-minh', 'ha-noi', 'da-nang', 'can-tho', 'all'
+ * Map location filter value sang keyword search địa điểm.
  */
-const matchLocation = (address, locationFilter) => {
-     if (!locationFilter || locationFilter === 'all') return true;
-     const map = {
-          'ho-chi-minh': 'hồ chí minh',
-          'ha-noi': 'hà nội',
-          'da-nang': 'đà nẵng',
-          'can-tho': 'cần thơ',
-     };
-     const keyword = map[locationFilter];
-     if (!keyword) return true;
-     return address?.toLowerCase().includes(keyword) ?? false;
+const LOCATION_MAP = {
+     'ho-chi-minh': 'Hồ Chí Minh',
+     'ha-noi': 'Hà Nội',
+     'da-nang': 'Đà Nẵng',
+     'can-tho': 'Cần Thơ',
 };
 
 /**
- * Kiểm tra employee_size có nằm trong khoảng filter không.
+ * Size ranges cho filter.
  */
-const matchSize = (employeeSize, sizeFilter) => {
-     if (!sizeFilter || sizeFilter === 'all') return true;
-     const sizeOption = COMPANY_SIZES.find((s) => s.value === sizeFilter);
-     if (!sizeOption || sizeOption.min == null) return true;
-     return employeeSize >= sizeOption.min && employeeSize <= sizeOption.max;
+const SIZE_RANGES = {
+     '1-50': { min: 1, max: 50 },
+     '51-200': { min: 51, max: 200 },
+     '201-500': { min: 201, max: 500 },
+     '501-1000': { min: 501, max: 1000 },
+     '1000+': { min: 1001, max: 999999 },
 };
 
 const CompanyListingPage = () => {
+     const [searchParams, setSearchParams] = useSearchParams();
+
      // Filter state
      const [filters, setFilters] = useState({
-          search: '',
-          location: 'all',
-          size: 'all',
+          search: searchParams.get('keyword') || '',
+          location: searchParams.get('location') || 'all',
+          size: searchParams.get('size') || 'all',
      });
 
      // Bản sao filters đã "áp dụng" khi user nhấn Tìm kiếm
      const [appliedFilters, setAppliedFilters] = useState({ ...filters });
+     const currentPage = Number(searchParams.get('page')) || 1;
 
-     const [currentPage, setCurrentPage] = useState(1);
+     // Build API params
+     const apiParams = useMemo(() => {
+          const params = {
+               page: currentPage,
+               limit: ITEMS_PER_PAGE,
+          };
+
+          if (appliedFilters.search) {
+               params.keyword = appliedFilters.search;
+          }
+
+          if (appliedFilters.location && appliedFilters.location !== 'all') {
+               params.location = LOCATION_MAP[appliedFilters.location] || '';
+          }
+
+          if (appliedFilters.size && appliedFilters.size !== 'all') {
+               const range = SIZE_RANGES[appliedFilters.size];
+               if (range) {
+                    params.min_size = range.min;
+                    params.max_size = range.max;
+               }
+          }
+
+          return params;
+     }, [appliedFilters, currentPage]);
+
+     // Fetch companies từ API
+     const { data: companiesResponse, isLoading, isError } = useQuery({
+          queryKey: ['companies', apiParams],
+          queryFn: () => getCompanies(apiParams),
+          staleTime: 2 * 60 * 1000, // 2 phút
+          keepPreviousData: true,
+     });
+
+     const companies = companiesResponse?.data?.data?.content || [];
+     const totalElements = companiesResponse?.data?.data?.total_elements || 0;
+     const totalPages = companiesResponse?.data?.data?.total_pages || 1;
 
      const handleFilterChange = (field, value) => {
           setFilters((prev) => ({ ...prev, [field]: value }));
      };
 
-     const handleSearch = () => {
+     const handleSearch = useCallback(() => {
           setAppliedFilters({ ...filters });
-          setCurrentPage(1);
-     };
+          // Reset to page 1 và update URL
+          const params = new URLSearchParams();
+          if (filters.search) params.set('keyword', filters.search);
+          if (filters.location !== 'all') params.set('location', filters.location);
+          if (filters.size !== 'all') params.set('size', filters.size);
+          setSearchParams(params, { replace: true });
+     }, [filters, setSearchParams]);
 
-     // Lọc dữ liệu
-     const filteredCompanies = useMemo(() => {
-          return SAMPLE_COMPANIES.filter((company) => {
-               // Search by name
-               if (
-                    appliedFilters.search &&
-                    !company.name.toLowerCase().includes(appliedFilters.search.toLowerCase())
-               ) {
-                    return false;
-               }
-               // Filter by location
-               if (!matchLocation(company.address, appliedFilters.location)) {
-                    return false;
-               }
-               // Filter by size
-               if (!matchSize(company.employee_size, appliedFilters.size)) {
-                    return false;
-               }
-               return true;
-          });
-     }, [appliedFilters]);
-
-     // Pagination
-     const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / ITEMS_PER_PAGE));
-     const paginatedCompanies = filteredCompanies.slice(
-          (currentPage - 1) * ITEMS_PER_PAGE,
-          currentPage * ITEMS_PER_PAGE
-     );
-
-     const handlePageChange = (page) => {
+     const handlePageChange = useCallback((page) => {
           if (page >= 1 && page <= totalPages) {
-               setCurrentPage(page);
+               const params = new URLSearchParams(searchParams);
+               if (page > 1) {
+                    params.set('page', String(page));
+               } else {
+                    params.delete('page');
+               }
+               setSearchParams(params, { replace: true });
                // Scroll to top of grid
                window.scrollTo({ top: 280, behavior: 'smooth' });
           }
-     };
+     }, [totalPages, searchParams, setSearchParams]);
 
      return (
           <>
@@ -147,15 +164,23 @@ const CompanyListingPage = () => {
                          <p className="text-sm text-muted-foreground">
                               Hiển thị{' '}
                               <span className="font-semibold text-foreground">
-                                   {filteredCompanies.length}
+                                   {totalElements}
                               </span>{' '}
                               công ty
                          </p>
                     </div>
 
-                    {paginatedCompanies.length > 0 ? (
+                    {isLoading ? (
+                         <div className="flex justify-center items-center py-16">
+                              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                         </div>
+                    ) : isError ? (
+                         <div className="text-center py-16">
+                              <p className="text-destructive">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.</p>
+                         </div>
+                    ) : companies.length > 0 ? (
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                              {paginatedCompanies.map((company) => (
+                              {companies.map((company) => (
                                    <CompanyCard key={company.id} company={company} />
                               ))}
                          </div>

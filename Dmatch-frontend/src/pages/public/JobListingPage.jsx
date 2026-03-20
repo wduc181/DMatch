@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, SlidersHorizontal, Briefcase } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search, SlidersHorizontal, Briefcase, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import JobFilterSidebar from '@/features/jobs/components/JobFilterSidebar';
 import JobListContent from '@/features/jobs/components/JobListContent';
-import { SAMPLE_JOBS } from '@/data/sampleData';
+import { getJobs } from '@/services/job.service';
 
 /**
  * Số lượng job mỗi trang — match backend default `limit=10`.
@@ -72,65 +73,38 @@ const buildSearchParams = (filters) => {
 };
 
 /**
- * Client-side filter logic trên fake data.
- * Sau này sẽ thay bằng API call với React Query.
+ * Build API params từ filters để gọi backend.
  */
-const filterJobs = (jobs, filters) => {
-     let result = [...jobs];
+const buildApiParams = (filters) => {
+     const params = {
+          page: filters.page,
+          limit: JOBS_PER_PAGE,
+          status: 'ACTIVE',
+     };
 
-     // Keyword search (title hoặc company_name)
-     if (filters.keyword) {
-          const kw = filters.keyword.toLowerCase();
-          result = result.filter(
-               (j) =>
-                    j.title.toLowerCase().includes(kw) ||
-                    (j.company_name && j.company_name.toLowerCase().includes(kw))
-          );
+     if (filters.keyword) params.keyword = filters.keyword;
+     if (filters.locations.length > 0) params.location = filters.locations[0];
+     if (filters.levels.length > 0) params.job_level_id = filters.levels.join(',');
+     if (filters.skills.length > 0) params.category_ids = filters.skills.join(',');
+
+     // Salary range (slider đơn vị triệu, API nhận đồng)
+     if (filters.salaryRange[0] > 0) {
+          params.salary_min = filters.salaryRange[0] * 1000000;
+     }
+     if (filters.salaryRange[1] < 100) {
+          params.salary_max = filters.salaryRange[1] * 1000000;
      }
 
-     // Location filter
-     if (filters.locations.length > 0) {
-          result = result.filter((j) => filters.locations.includes(j.location));
+     // Sort
+     if (filters.sortBy === 'salary_desc') {
+          params.sort = 'salary_max,desc';
+     } else if (filters.sortBy === 'salary_asc') {
+          params.sort = 'salary_min,asc';
+     } else {
+          params.sort = 'created_at,desc';
      }
 
-     // Level filter
-     if (filters.levels.length > 0) {
-          result = result.filter((j) => j.job_level && filters.levels.includes(j.job_level.code));
-     }
-
-     // Skill/category filter
-     if (filters.skills.length > 0) {
-          result = result.filter((j) =>
-               j.categories?.some((cat) => filters.skills.includes(cat.code))
-          );
-     }
-
-     // Salary range filter (đơn vị slider là triệu, data là đồng)
-     const salaryMin = filters.salaryRange[0] * 1000000;
-     const salaryMax = filters.salaryRange[1] * 1000000;
-     if (filters.salaryRange[0] > 0 || filters.salaryRange[1] < 100) {
-          result = result.filter(
-               (j) => j.salary_max >= salaryMin && j.salary_min <= salaryMax
-          );
-     }
-
-     return result;
-};
-
-/**
- * Client-side sort logic.
- */
-const sortJobs = (jobs, sortBy) => {
-     const sorted = [...jobs];
-     switch (sortBy) {
-          case 'salary_desc':
-               return sorted.sort((a, b) => b.salary_max - a.salary_max);
-          case 'salary_asc':
-               return sorted.sort((a, b) => a.salary_min - b.salary_min);
-          case 'newest':
-          default:
-               return sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-     }
+     return params;
 };
 
 /**
@@ -140,6 +114,18 @@ const sortJobs = (jobs, sortBy) => {
 const JobListingPage = () => {
      const [searchParams, setSearchParams] = useSearchParams();
      const filters = useMemo(() => parseFiltersFromParams(searchParams), [searchParams]);
+
+     // Fetch jobs từ API
+     const { data: jobsResponse, isLoading, isError } = useQuery({
+          queryKey: ['jobs', filters],
+          queryFn: () => getJobs(buildApiParams(filters)),
+          staleTime: 2 * 60 * 1000, // 2 phút
+          keepPreviousData: true,
+     });
+
+     const jobs = jobsResponse?.data?.data?.content || [];
+     const totalJobs = jobsResponse?.data?.data?.total_elements || 0;
+     const totalPages = jobsResponse?.data?.data?.total_pages || 1;
 
      /**
       * Cập nhật URL params khi thay đổi filter.
@@ -210,19 +196,6 @@ const JobListingPage = () => {
                updateFilters({ keyword });
           },
           [updateFilters]
-     );
-
-     // ===== Derived state: filter, sort, paginate =====
-     const filteredJobs = useMemo(() => filterJobs(SAMPLE_JOBS, filters), [filters]);
-     const sortedJobs = useMemo(() => sortJobs(filteredJobs, filters.sortBy), [filteredJobs, filters.sortBy]);
-
-     const totalJobs = sortedJobs.length;
-     const totalPages = Math.max(1, Math.ceil(totalJobs / JOBS_PER_PAGE));
-     const currentPage = Math.min(filters.page, totalPages);
-
-     const paginatedJobs = useMemo(
-          () => sortedJobs.slice((currentPage - 1) * JOBS_PER_PAGE, currentPage * JOBS_PER_PAGE),
-          [sortedJobs, currentPage]
      );
 
      // Filter props dùng chung cho sidebar (desktop & mobile sheet)
@@ -297,15 +270,25 @@ const JobListingPage = () => {
 
                          {/* Cột phải: Danh sách Job + Pagination */}
                          <main className="lg:col-span-3">
-                              <JobListContent
-                                   jobs={paginatedJobs}
-                                   totalJobs={totalJobs}
-                                   currentPage={currentPage}
-                                   totalPages={totalPages}
-                                   sortBy={filters.sortBy}
-                                   onSortChange={handleSortChange}
-                                   onPageChange={handlePageChange}
-                              />
+                              {isLoading ? (
+                                   <div className="flex justify-center items-center py-16">
+                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                   </div>
+                              ) : isError ? (
+                                   <div className="text-center py-16">
+                                        <p className="text-destructive">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.</p>
+                                   </div>
+                              ) : (
+                                   <JobListContent
+                                        jobs={jobs}
+                                        totalJobs={totalJobs}
+                                        currentPage={filters.page}
+                                        totalPages={totalPages}
+                                        sortBy={filters.sortBy}
+                                        onSortChange={handleSortChange}
+                                        onPageChange={handlePageChange}
+                                   />
+                              )}
                          </main>
                     </div>
                </div>

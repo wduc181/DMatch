@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
      Plus, MoreHorizontal, Pencil, Trash2, Eye, ToggleLeft, ToggleRight,
-     Briefcase, Loader2, Search, AlertCircle, CheckCircle2,
+     Briefcase, Loader2, Search, AlertCircle, CheckCircle2, Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
      Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -21,7 +21,6 @@ import {
 import useAuthStore from '@/store/useAuthStore';
 import { useCompanyByOwner } from '@/hooks/useCompanies';
 import { useJobsByCompany, useDeleteJob, useChangeJobStatus } from '@/hooks/useJobs';
-import { SAMPLE_RECRUITER_COMPANY, SAMPLE_RECRUITER_JOBS } from '@/data/sampleData';
 
 // ==================== Helpers ====================
 const formatSalary = (value) => {
@@ -40,6 +39,7 @@ const formatDate = (dateStr) => {
 
 const STATUS_CONFIG = {
      PUBLISHED: { label: 'Đang hiển thị', variant: 'default' },
+     ACTIVE: { label: 'Đang hiển thị', variant: 'default' },
      DRAFT: { label: 'Bản nháp', variant: 'secondary' },
      CLOSED: { label: 'Đã đóng', variant: 'outline' },
 };
@@ -61,22 +61,19 @@ const ManageJobsPage = () => {
 
      // Fetch company by owner
      const {
-          data: apiCompany,
+          data: company,
           isLoading: isLoadingCompany,
+          isError: isCompanyError,
      } = useCompanyByOwner(user?.id);
 
      // Fetch jobs by company
      const {
           data: jobsData,
           isLoading: isLoadingJobs,
-          refetch: refetchJobs,
-     } = useJobsByCompany(apiCompany?.id, { limit: 100 });
+     } = useJobsByCompany(company?.id, { limit: 100 });
 
      const deleteJobMutation = useDeleteJob();
      const changeStatusMutation = useChangeJobStatus();
-
-     // Sample data fallback
-     const company = apiCompany || SAMPLE_RECRUITER_COMPANY;
 
      // Auto-hide toast
      useEffect(() => {
@@ -86,13 +83,14 @@ const ManageJobsPage = () => {
           }
      }, [toast]);
 
-     const jobs = (jobsData?.content || jobsData) || SAMPLE_RECRUITER_JOBS;
+     const jobs = jobsData?.content || [];
      const filteredJobs = jobs.filter((job) =>
           job.title?.toLowerCase().includes(searchTerm.toLowerCase()),
      );
 
      const handleToggleStatus = async (job) => {
-          const newStatus = job.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+          const currentActive = job.status === 'PUBLISHED' || job.status === 'ACTIVE';
+          const newStatus = currentActive ? 'DRAFT' : 'ACTIVE';
           try {
                await changeStatusMutation.mutateAsync({
                     jobId: job.id,
@@ -101,7 +99,7 @@ const ManageJobsPage = () => {
                });
                setToast({
                     type: 'success',
-                    message: `Đã chuyển trạng thái sang "${STATUS_CONFIG[newStatus]?.label}"`,
+                    message: `Đã chuyển trạng thái sang "${STATUS_CONFIG[newStatus]?.label || newStatus}"`,
                });
           } catch (err) {
                setToast({
@@ -128,14 +126,41 @@ const ManageJobsPage = () => {
           }
      };
 
-     // Loading state (chỉ show khi có API data thật)
-     if (apiCompany && (isLoadingCompany || isLoadingJobs)) {
+     // Loading state
+     if (isLoadingCompany || (company && isLoadingJobs)) {
           return (
                <div className="min-h-[60vh] flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
-                         <div className="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                         <Loader2 size={32} className="animate-spin text-primary" />
                          <p className="text-sm text-muted-foreground">Đang tải danh sách việc làm...</p>
                     </div>
+               </div>
+          );
+     }
+
+     // Chưa có company
+     if (isCompanyError || !company) {
+          return (
+               <div className="min-h-[60vh] flex items-center justify-center">
+                    <Card className="max-w-md w-full">
+                         <CardContent className="pt-6 text-center">
+                              <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                   <Building2 size={32} className="text-primary" />
+                              </div>
+                              <h2 className="text-xl font-bold text-foreground mb-2">
+                                   Chưa có hồ sơ công ty
+                              </h2>
+                              <p className="text-sm text-muted-foreground mb-6">
+                                   Bạn cần tạo hồ sơ công ty trước khi có thể quản lý tin tuyển dụng.
+                              </p>
+                              <Button asChild>
+                                   <Link to="/recruiter/company-profile">
+                                        <Building2 size={16} />
+                                        Tạo hồ sơ công ty
+                                   </Link>
+                              </Button>
+                         </CardContent>
+                    </Card>
                </div>
           );
      }
@@ -223,8 +248,8 @@ const ManageJobsPage = () => {
                                    <TableBody>
                                         {filteredJobs.map((job) => {
                                              const statusCfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.DRAFT;
-                                             const salaryRange = job.salaryMin || job.salaryMax
-                                                  ? `${formatSalary(job.salaryMin) || '?'} - ${formatSalary(job.salaryMax) || '?'}`
+                                             const salaryRange = job.salary_min || job.salary_max
+                                                  ? `${formatSalary(job.salary_min) || '?'} - ${formatSalary(job.salary_max) || '?'}`
                                                   : 'Thỏa thuận';
 
                                              return (
@@ -238,13 +263,13 @@ const ManageJobsPage = () => {
                                                             </div>
                                                        </TableCell>
                                                        <TableCell className="text-sm text-muted-foreground">
-                                                            {JOB_TYPE_LABELS[job.jobType] || job.jobType}
+                                                            {JOB_TYPE_LABELS[job.job_type] || job.job_type}
                                                        </TableCell>
                                                        <TableCell className="text-sm text-muted-foreground">
                                                             {salaryRange}
                                                        </TableCell>
                                                        <TableCell className="text-sm text-muted-foreground">
-                                                            {formatDate(job.createdAt)}
+                                                            {formatDate(job.created_at)}
                                                        </TableCell>
                                                        <TableCell>
                                                             <Badge variant={statusCfg.variant}>
@@ -278,7 +303,7 @@ const ManageJobsPage = () => {
                                                                            onClick={() => handleToggleStatus(job)}
                                                                            disabled={changeStatusMutation.isPending}
                                                                       >
-                                                                           {job.status === 'PUBLISHED' ? (
+                                                                           {job.status === 'PUBLISHED' || job.status === 'ACTIVE' ? (
                                                                                 <>
                                                                                      <ToggleLeft size={14} />
                                                                                      Chuyển sang Nháp

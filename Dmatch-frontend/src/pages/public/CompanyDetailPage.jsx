@@ -9,40 +9,26 @@ import CompanyAbout from '@/features/companies/components/CompanyAbout';
 import CompanySidebarInfo from '@/features/companies/components/CompanySidebarInfo';
 import CompanyJobList from '@/features/companies/components/CompanyJobList';
 
-// ==================== SAMPLE DATA FALLBACK (xóa khi kết nối API thật) ====================
-import { SAMPLE_COMPANIES } from '@/data/sampleData';
-import { SAMPLE_JOBS } from '@/data/sampleData';
-
 const CompanyDetailPage = () => {
      const { id } = useParams();
 
-     // ==================== SAMPLE DATA FALLBACK ====================
-     const sampleCompany = SAMPLE_COMPANIES.find((c) => c.id === Number(id));
-     const sampleJobs = SAMPLE_JOBS.filter((j) => j.company_id === Number(id));
-
-     // Fetch company detail — fallback sample data khi API chưa sẵn sàng
+     // Fetch company detail từ API
      const {
-          data: apiCompany,
+          data: company,
           isLoading: isCompanyLoading,
-          error: companyError,
-     } = useCompany(id, {
-          retry: false,
-     });
+          isError: isCompanyError,
+     } = useCompany(id);
 
      // Fetch jobs của company — gọi sang job-service (Microservices pattern)
      const {
-          data: apiJobs,
+          data: jobsData,
           isLoading: isJobsLoading,
-     } = useJobsByCompany(id, {}, {
-          retry: false,
-     });
+     } = useJobsByCompany(id);
 
-     // Ưu tiên API data, fallback sang sample data khi API lỗi
-     const company = apiCompany ?? sampleCompany;
-     const jobs = apiJobs ?? sampleJobs;
+     const jobs = jobsData?.content || [];
 
      // Loading state
-     if (isCompanyLoading && !company) {
+     if (isCompanyLoading) {
           return (
                <div className="flex items-center justify-center min-h-[60vh]">
                     <Loader2 size={32} className="animate-spin text-primary" />
@@ -50,8 +36,8 @@ const CompanyDetailPage = () => {
           );
      }
 
-     // Error / Not found — chỉ khi cả API lẫn sample đều không có data
-     if (!isCompanyLoading && !company) {
+     // Error / Not found
+     if (isCompanyError || !company) {
           return (
                <div className="max-w-3xl mx-auto px-4 py-20 text-center">
                     <div className="inline-flex items-center justify-center size-16 rounded-full bg-muted mb-4">
@@ -82,7 +68,7 @@ const CompanyDetailPage = () => {
 
      return (
           <>
-               {/* ===== Phase 1: Hero Banner ===== */}
+               {/* ===== Hero Banner ===== */}
                <section className="relative">
                     {/* Cover Image / Gradient fallback */}
                     <div
@@ -160,7 +146,7 @@ const CompanyDetailPage = () => {
                     </div>
                </section>
 
-               {/* ===== Phase 2: Main Content (2 cột Desktop) ===== */}
+               {/* ===== Main Content (2 cột Desktop) ===== */}
                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                          {/* Cột trái — Nội dung chính (70%) */}

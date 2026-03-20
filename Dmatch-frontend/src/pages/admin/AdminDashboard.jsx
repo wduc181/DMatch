@@ -3,13 +3,14 @@ import {
      ArrowRight,
      Building2,
      Clock3,
+     Loader2,
      ShieldAlert,
      Users,
 } from 'lucide-react';
 import AdminStatCard from '@/features/admin/components/AdminStatCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SAMPLE_ADMIN_PENDING_JOBS, SAMPLE_ADMIN_USERS } from '@/data/sampleData';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
 
 const formatPercent = (value, total) => {
      if (!total) return 0;
@@ -33,8 +34,33 @@ const ProgressRow = ({ label, value, total, toneClass }) => {
 };
 
 const AdminDashboard = () => {
-     const users = SAMPLE_ADMIN_USERS;
-     const pendingJobs = SAMPLE_ADMIN_PENDING_JOBS;
+     // Fetch users từ API
+     const { data: usersResponse, isLoading, isError } = useAdminUsers();
+     const users = usersResponse?.data?.content || [];
+
+     if (isLoading) {
+          return (
+               <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                         <Loader2 size={32} className="animate-spin text-primary" />
+                         <p className="text-sm text-muted-foreground">Đang tải dữ liệu...</p>
+                    </div>
+               </div>
+          );
+     }
+
+     if (isError) {
+          return (
+               <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="text-center">
+                         <p className="text-destructive">Có lỗi xảy ra khi tải dữ liệu.</p>
+                         <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+                              Thử lại
+                         </Button>
+                    </div>
+               </div>
+          );
+     }
 
      const candidateCount = users.filter((user) => user.roles?.includes('USER') && !user.roles?.includes('COMPANY') && !user.roles?.includes('ADMIN')).length;
      const recruiterCount = users.filter((user) => user.roles?.includes('COMPANY')).length;
@@ -42,6 +68,9 @@ const AdminDashboard = () => {
      const activeCount = users.filter((user) => user.status === 'ACTIVE').length;
      const bannedCount = users.filter((user) => user.status === 'BANNED').length;
      const totalUsers = users.length;
+
+     // TODO: Khi có API moderation: const { data: pendingJobs } = usePendingJobs();
+     const pendingJobsCount = 0;
 
      return (
           <div className="space-y-6">
@@ -78,8 +107,8 @@ const AdminDashboard = () => {
                     <AdminStatCard
                          icon={Clock3}
                          label="Việc làm chờ duyệt"
-                         value={pendingJobs.length}
-                         description="Dùng sample moderation data để test bố cục UI"
+                         value={pendingJobsCount}
+                         description="Tính năng moderation đang chờ backend API"
                          tone="amber"
                     />
                </div>
@@ -128,18 +157,19 @@ const AdminDashboard = () => {
                                    total={Math.max(totalUsers, 1)}
                                    toneClass="bg-destructive"
                               />
-                              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                                   <div className="flex items-start gap-3">
-                                        <ShieldAlert size={18} className="mt-0.5 shrink-0" />
-                                        <div>
-                                             <p className="font-medium">Lưu ý nghiệp vụ</p>
-                                             <p className="mt-1 text-amber-700">
-                                                  Dashboard hiện đang đọc dữ liệu mẫu cục bộ để bạn test UI. Khi nối backend, chỉ cần thay
-                                                  sample bằng dữ liệu thật từ API admin tương ứng.
-                                             </p>
+                              {totalUsers === 0 && (
+                                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                                        <div className="flex items-start gap-3">
+                                             <ShieldAlert size={18} className="mt-0.5 shrink-0" />
+                                             <div>
+                                                  <p className="font-medium">Chưa có người dùng</p>
+                                                  <p className="mt-1 text-amber-700">
+                                                       Hệ thống chưa có người dùng nào. Dữ liệu sẽ cập nhật khi có người đăng ký.
+                                                  </p>
+                                             </div>
                                         </div>
                                    </div>
-                              </div>
+                              )}
                          </CardContent>
                     </Card>
                </div>

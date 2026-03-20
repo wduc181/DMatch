@@ -8,7 +8,7 @@ import {
      SelectTrigger,
      SelectValue,
 } from '@/components/ui/select';
-import { LOCATIONS, COMPANY_SIZES } from '@/data/sampleData';
+import { LOCATIONS, COMPANY_SIZES } from '@/constants/filters';
 
 /**
  * CompanyFilterBar — thanh lọc nằm ngang cho trang CompanyListing.

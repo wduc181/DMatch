@@ -11,6 +11,10 @@ import {
 } from '@/components/ui/table';
 import { SAMPLE_ADMIN_PENDING_JOBS } from '@/data/sampleData';
 
+// TODO: Cần implement job moderation API trong backend (job-service)
+// Khi có API: const { data: jobs } = usePendingJobs();
+// Endpoint cần có: GET /api/v1/admin/jobs/pending hoặc GET /api/v1/jobs?status=PENDING_REVIEW
+
 const MODERATION_META = {
      PENDING_REVIEW: {
           label: 'Chờ duyệt',

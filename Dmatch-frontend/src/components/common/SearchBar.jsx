@@ -8,7 +8,7 @@ import {
      SelectTrigger,
      SelectValue,
 } from '@/components/ui/select';
-import { LOCATIONS } from '@/data/sampleData';
+import { LOCATIONS } from '@/constants/filters';
 
 const SearchBar = () => {
      return (

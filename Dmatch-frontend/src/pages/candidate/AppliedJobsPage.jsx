@@ -107,9 +107,11 @@ const AppliedJobsPage = () => {
      const [searchTerm, setSearchTerm] = useState('');
      const [statusFilter, setStatusFilter] = useState('all');
 
-     // TODO: Thay bằng React Query hook khi backend sẵn sàng
-     // const { data: applications, isLoading } = useMyApplications();
+     // TODO: Cần implement application-service backend trước
+     // Khi có API: const { data: applications, isLoading } = useMyApplications();
+     // Endpoint cần có: GET /api/v1/applications/me
      const applications = SAMPLE_CANDIDATE_APPLICATIONS;
+     const isLoading = false;
 
      // Filter
      const filteredApplications = useMemo(() => {

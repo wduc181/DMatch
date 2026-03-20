@@ -1,35 +1,59 @@
 import { useMemo } from 'react';
-import { Flame } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Flame, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import JobCard from '@/features/jobs/components/JobCard';
-import { SAMPLE_JOBS } from '@/data/sampleData';
+import { getJobs } from '@/services/job.service';
 
 const FeaturedJobsSection = () => {
+     // Fetch jobs từ API
+     const { data: jobsResponse, isLoading } = useQuery({
+          queryKey: ['featured-jobs'],
+          queryFn: () => getJobs({ limit: 12, status: 'ACTIVE' }),
+          staleTime: 5 * 60 * 1000, // 5 phút
+     });
+
+     const jobs = jobsResponse?.data?.data?.content || [];
+
      // Filter jobs by category tabs
      const latestJobs = useMemo(
-          () => [...SAMPLE_JOBS].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
-          []
+          () => [...jobs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
+          [jobs]
      );
 
      const internFresherJobs = useMemo(
-          () => SAMPLE_JOBS.filter((j) =>
+          () => jobs.filter((j) =>
                ['INTERN', 'FRESHER'].includes(j.job_level?.code)
           ),
-          []
+          [jobs]
      );
 
      const seniorJobs = useMemo(
-          () => SAMPLE_JOBS.filter((j) => j.job_level?.code === 'SENIOR'),
-          []
+          () => jobs.filter((j) => j.job_level?.code === 'SENIOR'),
+          [jobs]
      );
 
-     const renderJobGrid = (jobs) => (
+     const renderJobGrid = (jobList) => (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-               {jobs.map((job) => (
+               {jobList.map((job) => (
                     <JobCard key={job.id} job={job} />
                ))}
           </div>
      );
+
+     if (isLoading) {
+          return (
+               <section className="py-12 md:py-16 bg-muted/30">
+                    <div className="flex justify-center items-center py-16">
+                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+               </section>
+          );
+     }
+
+     if (jobs.length === 0) {
+          return null;
+     }
 
      return (
           <section className="py-12 md:py-16 bg-muted/30">

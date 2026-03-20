@@ -22,7 +22,6 @@ import { useCompanyByOwner } from '@/hooks/useCompanies';
 import { useJobsByCompany } from '@/hooks/useJobs';
 import { Building2 } from 'lucide-react';
 import {
-     SAMPLE_RECRUITER_JOBS,
      SAMPLE_APPLICATIONS,
 } from '@/data/sampleData';
 
@@ -79,11 +78,13 @@ const ManageCandidatesPage = () => {
           );
      }
 
-     const jobs = (jobsData?.content || jobsData) || SAMPLE_RECRUITER_JOBS;
+     const jobs = jobsData?.content || [];
 
-     // TODO: Replace with actual API call when backend apply feature is ready
-     // const { data: apiApplications } = useApplicationsByCompany(company.id, { job_id: selectedJobId });
+     // TODO: Cần implement application-service backend trước
+     // Khi có API: const { data: applications } = useApplicationsByCompany(company.id, { job_id: selectedJobId });
+     // Endpoint cần có: GET /api/v1/applications (với filter company_id, job_id)
      const applications = SAMPLE_APPLICATIONS;
+     const isApplicationsLoading = false;
 
      // Filter applications
      const filteredApplications = applications.filter((app) => {

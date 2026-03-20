@@ -1,4 +1,5 @@
-import { Building2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Building2, Loader2 } from 'lucide-react';
 import {
      Carousel,
      CarouselContent,
@@ -7,9 +8,32 @@ import {
      CarouselNext,
 } from '@/components/ui/carousel';
 import CompanyCard from '@/features/companies/components/CompanyCard';
-import { SAMPLE_COMPANIES } from '@/data/sampleData';
+import { getCompanies } from '@/services/company.service';
 
 const TopCompaniesSection = () => {
+     // Fetch companies từ API
+     const { data: companiesResponse, isLoading } = useQuery({
+          queryKey: ['top-companies'],
+          queryFn: () => getCompanies({ limit: 12 }),
+          staleTime: 5 * 60 * 1000, // 5 phút
+     });
+
+     const companies = companiesResponse?.data?.data?.content || [];
+
+     if (isLoading) {
+          return (
+               <section className="py-12 md:py-16">
+                    <div className="flex justify-center items-center py-16">
+                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+               </section>
+          );
+     }
+
+     if (companies.length === 0) {
+          return null;
+     }
+
      return (
           <section className="py-12 md:py-16">
                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,7 +60,7 @@ const TopCompaniesSection = () => {
                               }}
                          >
                               <CarouselContent className="-ml-4">
-                                   {SAMPLE_COMPANIES.map((company) => (
+                                   {companies.map((company) => (
                                         <CarouselItem
                                              key={company.id}
                                              className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
