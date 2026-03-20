@@ -85,3 +85,27 @@ export const getJobLevels = () => {
 export const getJobCategories = () => {
      return axiosClient.get('/api/v1/jobs/categories');
 };
+
+/**
+ * Cập nhật job level (COMPANY/ADMIN).
+ * @param {number} jobId
+ * @param {number} companyId
+ * @param {number} jobLevelId
+ */
+export const setJobLevel = (jobId, companyId, jobLevelId) => {
+     return axiosClient.put(`/api/v1/jobs/${jobId}/level`, null, {
+          params: { company_id: companyId, job_level_id: jobLevelId },
+     });
+};
+
+/**
+ * Cập nhật job categories (COMPANY/ADMIN).
+ * @param {number} jobId
+ * @param {number} companyId
+ * @param {number[]} categoryIds
+ */
+export const setJobCategories = (jobId, companyId, categoryIds) => {
+     return axiosClient.put(`/api/v1/jobs/${jobId}/categories`, { category_ids: categoryIds }, {
+          params: { company_id: companyId },
+     });
+};
