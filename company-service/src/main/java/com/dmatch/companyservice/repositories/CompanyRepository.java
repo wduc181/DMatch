@@ -18,12 +18,13 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     /**
      * Tìm kiếm + lọc companies với nhiều tiêu chí (keyword, location, employee size).
-     * Dùng JPQL với điều kiện optional (null = bỏ qua filter đó).
+     * Dùng JPQL với điều kiện optional (null/empty = bỏ qua filter đó).
+     * Sử dụng COALESCE thay vì IS NULL để tránh lỗi PostgreSQL "function lower(bytea) does not exist".
      */
     @Query("SELECT c FROM Company c WHERE " +
-            "(:keyword IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "(COALESCE(:keyword, '') = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "    OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-            "AND (:location IS NULL OR LOWER(c.address) LIKE LOWER(CONCAT('%', :location, '%'))) " +
+            "AND (COALESCE(:location, '') = '' OR LOWER(c.address) LIKE LOWER(CONCAT('%', :location, '%'))) " +
             "AND (:minSize IS NULL OR c.employeeSize >= :minSize) " +
             "AND (:maxSize IS NULL OR c.employeeSize <= :maxSize)")
     Page<Company> searchCompanies(
