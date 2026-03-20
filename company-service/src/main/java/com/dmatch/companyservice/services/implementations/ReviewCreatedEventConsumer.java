@@ -17,8 +17,6 @@ public class ReviewCreatedEventConsumer {
 
           try {
                log.info("Received review-created event: {}", message);
-               // Có thể mở rộng: cập nhật rating trung bình cho company, gửi notification,
-               // v.v.
           } catch (Exception e) {
                log.warn("Failed to process review-created event: {}", e.getMessage());
           }

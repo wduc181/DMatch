@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,9 +38,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse createUser(UserCreateRequest userCreateRequest) {
-        String email = userCreateRequest.getEmail();
+        String email = normalizeEmail(userCreateRequest.getEmail());
 
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new InvalidBodyException("Email already exists");
         }
         Role role = roleRepository.findByName(RoleName.USER.name())
@@ -48,8 +49,7 @@ public class UserServiceImpl implements UserService {
         roles.add(role);
 
         User user = User.builder()
-                .email(userCreateRequest.getEmail())
-                .password(userCreateRequest.getPassword()) // Password đã hash
+        .email(email)
                 .fullName(userCreateRequest.getFullName())
                 .status(UserStatus.ACTIVE)
                 .roles(roles)
@@ -68,7 +68,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public InternalUserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmailIgnoreCase(email)
+        String normalizedEmail = normalizeEmail(email);
+        User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + email));
         return InternalUserResponse.fromUser(user);
     }
@@ -143,12 +144,6 @@ public class UserServiceImpl implements UserService {
         return UserResponse.fromUser(user);
     }
 
-    // ==================== Candidate Profile ====================
-
-    /**
-     * Lấy profile của user hiện tại.
-     * Nếu chưa có profile → tự tạo rỗng (lazy creation).
-     */
     @Override
     @Transactional
     public CandidateProfileResponse getMyProfile() {
@@ -163,10 +158,6 @@ public class UserServiceImpl implements UserService {
         return CandidateProfileResponse.fromEntity(profile);
     }
 
-    /**
-     * Cập nhật profile của user hiện tại.
-     * Cũng cập nhật User.fullName nếu request có truyền.
-     */
     @Override
     @Transactional
     public CandidateProfileResponse updateMyProfile(CandidateProfileUpdateRequest request) {
@@ -174,13 +165,10 @@ public class UserServiceImpl implements UserService {
         CandidateProfile profile = candidateProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> CandidateProfile.builder().user(user).build());
 
-        // Cập nhật fullName trên User entity nếu có
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
             userRepository.save(user);
         }
-
-        // Map DTO → entity (chỉ cập nhật field không null)
         if (request.getPhoneNumber() != null)
             profile.setPhoneNumber(request.getPhoneNumber());
         if (request.getDateOfBirth() != null)
@@ -210,7 +198,6 @@ public class UserServiceImpl implements UserService {
         return CandidateProfileResponse.fromEntity(saved);
     }
 
-    // ==================== Helper ====================
 
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -222,5 +209,9 @@ public class UserServiceImpl implements UserService {
         String email = authentication.getName();
         return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new DataNotFoundException("Current user not found"));
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

@@ -64,8 +64,11 @@ public class FileStorageServiceImpl implements FileStorageService {
                log.info("Uploaded file successfully: {}", key);
                return key;
           } catch (IOException e) {
-               log.error("error upload file: {}", e.getMessage());
-               throw new FileStorageException("Error upload file: " + e.getMessage());
+               log.error("Error reading file: {}", e.getMessage());
+               throw new FileStorageException("Error reading file: " + e.getMessage());
+          } catch (Exception e) {
+               log.error("Error uploading file to S3: {}", e.getMessage());
+               throw new FileStorageException("Error uploading file to S3: " + e.getMessage());
           }
      }
 

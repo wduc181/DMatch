@@ -25,10 +25,6 @@ public class InternalCompanyController {
                     .build());
      }
 
-     /**
-      * Batch fetch companies by IDs — dùng cho job-service enrichment.
-      * GET /internal/api/v1/companies/batch?ids=1,2,3
-      */
      @GetMapping("/batch")
      public ResponseEntity<ApiResponse<List<CompanyResponse>>> getCompaniesByIds(
                @RequestParam("ids") List<Long> ids) {

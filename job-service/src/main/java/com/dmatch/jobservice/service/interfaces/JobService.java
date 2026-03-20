@@ -25,8 +25,5 @@ public interface JobService {
 	List<JobLevelResponse> getJobLevels();
 	List<JobCategoryResponse> getJobCategories();
 
-	/**
-	 * Đếm số job ACTIVE cho danh sách company IDs (dùng cho internal API).
-	 */
 	Map<Long, Integer> countActiveJobsByCompanyIds(List<Long> companyIds);
 }

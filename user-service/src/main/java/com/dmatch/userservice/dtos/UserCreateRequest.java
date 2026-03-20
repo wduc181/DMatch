@@ -15,14 +15,7 @@ public class UserCreateRequest {
     @Size(max = 255, message = "Email must not exceed 255 characters")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(max = 255, message = "Hashed password must not exceed 255 characters")
-    private String password;
-
     @Size(max = 255, message = "Full name must not exceed 255 characters")
     @JsonProperty("fullname")
     private String fullName;
-
-    @NotBlank(message = "Role is required")
-    private String role;
 }
