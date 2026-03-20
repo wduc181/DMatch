@@ -10,11 +10,6 @@ import java.util.Map;
 
 @FeignClient(name = "job-service", path = "/internal/jobs", fallback = JobClientFallback.class)
 public interface JobClient {
-
-    /**
-     * Lấy số lượng job ACTIVE theo danh sách companyId.
-     * Response: Map<companyId, count>
-     */
     @GetMapping("/count-by-companies")
     ResponseEntity<ApiResponse<Map<Long, Integer>>> countActiveJobsByCompanyIds(
             @RequestParam("company_ids") java.util.List<Long> companyIds

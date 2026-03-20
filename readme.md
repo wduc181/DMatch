@@ -83,6 +83,7 @@ Config Server runs on **port 8888** using **native config** at `classpath:/confi
 - `defaultZone`: `http://localhost:8111/eureka`
 
 ### Auth Service
+- PostgreSQL: `jdbc:postgresql://localhost:5432/auth_service_db`
 - JWT config:
   - `jwt.secret`: `${JWT_SECRET}`
   - `jwt.expiration`: `3600000`

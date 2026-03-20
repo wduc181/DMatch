@@ -6,10 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Internal endpoints cho service-to-service communication (không yêu cầu JWT).
- * Chỉ được gọi bởi các service khác qua Feign Client.
- */
 @RestController
 @RequestMapping("${app.internal-prefix}/files")
 @RequiredArgsConstructor

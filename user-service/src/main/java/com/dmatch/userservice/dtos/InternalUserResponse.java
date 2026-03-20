@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class InternalUserResponse {
     private Long id;
     private String email;
-    private String password;
     private String status;
     private List<String> roles;
 
@@ -33,7 +32,6 @@ public class InternalUserResponse {
                 .id(user.getId())
                 .email(user.getEmail())
                 .status(user.getStatus().toString())
-                .password(user.getPassword())
                 .roles(mapRoles(user.getRoles()))
                 .build();
     }
