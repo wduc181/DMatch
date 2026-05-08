@@ -49,6 +49,15 @@ public class CandidateProfileResponse {
      private String cvFileUrl;
 
      public static CandidateProfileResponse fromEntity(CandidateProfile profile) {
+          return fromEntity(profile, profile.getSkills(), profile.getExperience(), profile.getEducation());
+     }
+
+     public static CandidateProfileResponse fromEntity(
+               CandidateProfile profile,
+               String skills,
+               String experience,
+               String education
+     ) {
           return CandidateProfileResponse.builder()
                     .id(profile.getId())
                     .userId(profile.getUser().getId())
@@ -59,9 +68,9 @@ public class CandidateProfileResponse {
                     .gender(profile.getGender())
                     .address(profile.getAddress())
                     .bio(profile.getBio())
-                    .skills(profile.getSkills())
-                    .experience(profile.getExperience())
-                    .education(profile.getEducation())
+                    .skills(skills)
+                    .experience(experience)
+                    .education(education)
                     .githubUrl(profile.getGithubUrl())
                     .linkedinUrl(profile.getLinkedinUrl())
                     .portfolioUrl(profile.getPortfolioUrl())

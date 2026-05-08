@@ -14,11 +14,7 @@ public class JobServiceClientFallback implements JobServiceClient {
           log.warn("Fallback: Job Service unavailable - getJobById({})", id);
           return ApiResponse.<JobSummaryResponse>builder()
                     .message("Job Service unavailable")
-                    .data(JobSummaryResponse.builder()
-                              .id(id)
-                              .title("Job Info Unavailable")
-                              .companyId(null)
-                              .build())
+                    .data(null)
                     .build();
      }
 }

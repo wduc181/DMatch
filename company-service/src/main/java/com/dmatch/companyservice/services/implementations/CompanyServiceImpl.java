@@ -11,6 +11,7 @@ import com.dmatch.companyservice.entities.Company;
 import com.dmatch.companyservice.exceptions.DataNotFoundException;
 import com.dmatch.companyservice.exceptions.InvalidParamException;
 import com.dmatch.companyservice.exceptions.PermissionDeniedException;
+import com.dmatch.companyservice.exceptions.ServiceUnavailableException;
 import com.dmatch.companyservice.repositories.CompanyRepository;
 import com.dmatch.companyservice.services.interfaces.CompanyService;
 import feign.FeignException;
@@ -46,6 +47,7 @@ public class CompanyServiceImpl implements CompanyService {
             throw new InvalidParamException("owner_id is required");
         }
         validateOwnerAccess(ownerId);
+        validateOwnerExists(ownerId);
 
         if (companyRepository.existsByOwnerId(ownerId)) {
             throw new InvalidParamException("User already owns a company. Cannot create another one.");
@@ -237,7 +239,24 @@ public class CompanyServiceImpl implements CompanyService {
             }
             return userResponse.getData();
         } catch (FeignException e) {
-            throw new DataNotFoundException("User not found with email: " + email);
+            if (e.status() == 404) {
+                throw new DataNotFoundException("User not found with email: " + email);
+            }
+            throw new ServiceUnavailableException("User Service unavailable. Please try again later.");
+        }
+    }
+
+    private void validateOwnerExists(Long ownerId) {
+        try {
+            var userResponse = userClient.getUserById(ownerId).getBody();
+            if (userResponse == null || userResponse.getData() == null) {
+                throw new DataNotFoundException("User not found with id: " + ownerId);
+            }
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new DataNotFoundException("User not found with id: " + ownerId);
+            }
+            throw new ServiceUnavailableException("User Service unavailable. Please try again later.");
         }
     }
 

@@ -11,6 +11,9 @@ import com.dmatch.jobservice.exceptions.PermissionDeniedException;
 import com.dmatch.jobservice.clients.UserClient;
 import com.dmatch.jobservice.clients.CompanyClient;
 import com.dmatch.jobservice.commons.ApiResponse;
+import com.dmatch.jobservice.commons.CurrencyCode;
+import com.dmatch.jobservice.commons.JobStatus;
+import com.dmatch.jobservice.commons.JobType;
 import com.dmatch.jobservice.repositories.JobCategoryRepository;
 import com.dmatch.jobservice.repositories.JobLevelRepository;
 import com.dmatch.jobservice.repositories.JobRepository;
@@ -53,6 +56,9 @@ public class JobServiceImpl implements JobService {
         }
 
         validateCompanyOwnership(companyId);
+        String jobType = normalizeJobType(request.getJobType());
+        String currency = normalizeCurrency(request.getCurrency());
+        validateSalaryRange(request.getSalaryMin(), request.getSalaryMax());
 
         if (jobRepository.existsByCompanyIdAndTitleIgnoreCase(companyId, request.getTitle())) {
             throw new InvalidBodyException("Job title already exists for this company");
@@ -63,11 +69,11 @@ public class JobServiceImpl implements JobService {
                 .description(request.getDescription())
                 .requirements(request.getRequirements())
                 .location(request.getLocation())
-                .jobType(request.getJobType())
-                .status("DRAFT")
+                .jobType(jobType)
+                .status(JobStatus.DRAFT.name())
                 .salaryMin(request.getSalaryMin())
                 .salaryMax(request.getSalaryMax())
-                .currency(request.getCurrency() == null ? "VND" : request.getCurrency())
+                .currency(currency)
                 .companyId(companyId)
                 .build();
 
@@ -107,6 +113,10 @@ public class JobServiceImpl implements JobService {
 
         validateJobOwnership(job, companyId);
 
+        Long nextSalaryMin = request.getSalaryMin() != null ? request.getSalaryMin() : job.getSalaryMin();
+        Long nextSalaryMax = request.getSalaryMax() != null ? request.getSalaryMax() : job.getSalaryMax();
+        validateSalaryRange(nextSalaryMin, nextSalaryMax);
+
         if (request.getTitle() != null) {
             job.setTitle(request.getTitle());
         }
@@ -120,7 +130,7 @@ public class JobServiceImpl implements JobService {
             job.setLocation(request.getLocation());
         }
         if (request.getJobType() != null) {
-            job.setJobType(request.getJobType());
+            job.setJobType(normalizeJobType(request.getJobType()));
         }
         if (request.getSalaryMin() != null) {
             job.setSalaryMin(request.getSalaryMin());
@@ -129,7 +139,7 @@ public class JobServiceImpl implements JobService {
             job.setSalaryMax(request.getSalaryMax());
         }
         if (request.getCurrency() != null) {
-            job.setCurrency(request.getCurrency());
+            job.setCurrency(normalizeCurrency(request.getCurrency()));
         }
 
         if (request.getJobLevelId() != null) {
@@ -215,7 +225,7 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
         validateJobOwnership(job, companyId);
-        job.setStatus(status);
+        job.setStatus(normalizeJobStatus(status));
         Job saved = jobRepository.save(job);
         return JobResponse.fromJob(saved);
     }
@@ -290,6 +300,55 @@ public class JobServiceImpl implements JobService {
             case "salary_asc" -> Sort.by("salaryMin").ascending();
             default -> Sort.by("createdAt").descending();
         };
+    }
+
+    private String normalizeJobStatus(String status) {
+        if (status == null || status.isBlank()) {
+            throw new InvalidParamException("status is required");
+        }
+        String normalized = status.trim().toUpperCase(Locale.ROOT);
+        try {
+            return JobStatus.valueOf(normalized).name();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParamException("Unsupported job status: " + status);
+        }
+    }
+
+    private String normalizeJobType(String jobType) {
+        if (jobType == null || jobType.isBlank()) {
+            throw new InvalidParamException("job_type is required");
+        }
+        String normalized = jobType.trim().toUpperCase(Locale.ROOT);
+        try {
+            return JobType.valueOf(normalized).name();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParamException("Unsupported job_type: " + jobType);
+        }
+    }
+
+    private String normalizeCurrency(String currency) {
+        if (currency == null || currency.isBlank()) {
+            // Currency has a product default; job_type intentionally does not.
+            return CurrencyCode.VND.name();
+        }
+        String normalized = currency.trim().toUpperCase(Locale.ROOT);
+        try {
+            return CurrencyCode.valueOf(normalized).name();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParamException("Unsupported currency: " + currency);
+        }
+    }
+
+    private void validateSalaryRange(Long salaryMin, Long salaryMax) {
+        if (salaryMin != null && salaryMin < 0) {
+            throw new InvalidParamException("salary_min must be non-negative");
+        }
+        if (salaryMax != null && salaryMax < 0) {
+            throw new InvalidParamException("salary_max must be non-negative");
+        }
+        if (salaryMin != null && salaryMax != null && salaryMin > salaryMax) {
+            throw new InvalidParamException("salary_min must be less than or equal to salary_max");
+        }
     }
 
     /**
