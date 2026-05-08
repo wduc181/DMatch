@@ -13,6 +13,14 @@ public class CompanyResponse {
     private String name;
 
     @JsonProperty("owner_id")
-    @JsonAlias({"ownerId"})
+    @JsonAlias({ "ownerId" })
     private Long ownerId;
+
+    @JsonProperty("logo_key")
+    @JsonAlias({ "logoKey" })
+    private String logoKey;
+
+    @JsonProperty("logo_url")
+    @JsonAlias({ "logoUrl" })
+    private String logoUrl;
 }

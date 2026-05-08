@@ -17,7 +17,6 @@ public class JobCreatedEventConsumer {
 
           try {
                log.info("Received job-created event: {}", message);
-               // Có thể mở rộng: cập nhật job count cho company, gửi notification, v.v.
           } catch (Exception e) {
                log.warn("Failed to process job-created event: {}", e.getMessage());
           }

@@ -14,12 +14,7 @@ public class UserServiceClientFallback implements UserServiceClient {
           log.warn("Fallback: User Service unavailable - getUserById({})", id);
           return ApiResponse.<UserSummaryResponse>builder()
                     .message("User Service unavailable")
-                    .data(UserSummaryResponse.builder()
-                              .id(id)
-                              .email("unavailable")
-                              .fullName("User Info Unavailable")
-                              .status("UNKNOWN")
-                              .build())
+                    .data(null)
                     .build();
      }
 
@@ -28,12 +23,7 @@ public class UserServiceClientFallback implements UserServiceClient {
           log.warn("Fallback: User Service unavailable - getUserByEmail({})", email);
           return ApiResponse.<UserSummaryResponse>builder()
                     .message("User Service unavailable")
-                    .data(UserSummaryResponse.builder()
-                              .id(null)
-                              .email(email)
-                              .fullName("User Info Unavailable")
-                              .status("UNKNOWN")
-                              .build())
+                    .data(null)
                     .build();
      }
 }

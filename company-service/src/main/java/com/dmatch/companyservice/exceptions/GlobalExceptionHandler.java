@@ -45,6 +45,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ApiResponse<?>> handleServiceUnavailableException(Exception e) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.builder()
+                .message(e.getMessage())
+                .data(null)
+                .build()
+        );
+    }
+
     @ExceptionHandler({PermissionDeniedException.class})
     public ResponseEntity<ApiResponse<?>> handlePermissionException(Exception e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.builder()

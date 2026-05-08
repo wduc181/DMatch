@@ -12,7 +12,6 @@ import java.util.List;
 public class InternalUserResponse {
     private Long id;
     private String email;
-    private String password;
     private String status;
     private List<String> roles;
 }

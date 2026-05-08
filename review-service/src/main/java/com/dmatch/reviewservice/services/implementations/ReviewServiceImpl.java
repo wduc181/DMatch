@@ -132,7 +132,7 @@ public class ReviewServiceImpl implements ReviewService {
 		Review review = reviewRepository.findById(id)
 				.orElseThrow(() -> new DataNotFoundException("Review not found"));
 
-		review.setStatus(request.getStatus());
+		review.setStatus(normalizeReviewStatus(request.getStatus()));
 		Review saved = reviewRepository.save(review);
 		return toResponse(saved);
 	}
@@ -250,6 +250,18 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 
 		return specification;
+	}
+
+	private String normalizeReviewStatus(String status) {
+		if (status == null || status.isBlank()) {
+			throw new InvalidParamException("status is required");
+		}
+		String normalized = status.trim().toUpperCase(Locale.ROOT);
+		try {
+			return ReviewStatus.valueOf(normalized).name();
+		} catch (IllegalArgumentException e) {
+			throw new InvalidParamException("Unsupported review status: " + status);
+		}
 	}
 
 	private ReviewResponse toResponse(Review review) {

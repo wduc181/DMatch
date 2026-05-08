@@ -34,4 +34,7 @@ public class JobSearchRequest {
 
     @JsonProperty("company_id")
     private Long companyId;
+
+    @JsonProperty("sort")
+    private String sort;
 }

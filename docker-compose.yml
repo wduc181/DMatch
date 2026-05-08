@@ -1,16 +1,32 @@
+# ============================================================
+# DMatch Docker Compose
+#
+# Profiles (chọn profile để giảm tải khi dev):
+#   infra  – postgres, kafka, discovery, config, gateway
+#   app    – toàn bộ backend services
+#   full   – frontend
+#
+# Cách dùng:
+#   docker compose --profile infra up           # chỉ hạ tầng
+#   docker compose --profile infra --profile app up   # infra + backend
+#   docker compose --profile infra --profile app --profile full up  # tất cả
+# ============================================================
+
 services:
 
-  # ==================== Infrastructure ====================
+  # ==================== Infrastructure (profile: infra) ====================
 
   postgres:
     image: postgres:16-alpine
     container_name: dmatch-postgres
+    profiles:
+      - infra
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: postgres
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
@@ -25,6 +41,8 @@ services:
   kafka:
     image: apache/kafka:3.8.1
     container_name: dmatch-kafka
+    profiles:
+      - infra
     ports:
       - "9094:9094"
     environment:
@@ -53,13 +71,13 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 1. Discovery Service ====================
-
   discovery-service:
     build:
       context: ./discovery-service
       dockerfile: Dockerfile
     container_name: dmatch-discovery
+    profiles:
+      - infra
     ports:
       - "8111:8111"
     environment:
@@ -74,13 +92,13 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 2. Config Server ====================
-
   config-server:
     build:
       context: ./config-server
       dockerfile: Dockerfile
     container_name: dmatch-config
+    profiles:
+      - infra
     ports:
       - "8888:8888"
     environment:
@@ -97,13 +115,13 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 3. API Gateway ====================
-
   api-gateway:
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
     container_name: dmatch-gateway
+    profiles:
+      - infra
     ports:
       - "8081:8081"
     environment:
@@ -121,13 +139,15 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 4. User Service ====================
+  # ==================== Backend Services (profile: app) ====================
 
   user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile
     container_name: dmatch-user
+    profiles:
+      - app
     ports:
       - "8082:8080"
     environment:
@@ -152,35 +172,40 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 5. Auth Service ====================
-
   auth-service:
     build:
       context: ./auth-service
       dockerfile: Dockerfile
     container_name: dmatch-auth
+    profiles:
+      - app
     ports:
       - "8083:8080"
     environment:
       SERVER_PORT: 8080
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8111/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_service_db
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       config-server:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
       user-service:
         condition: service_healthy
     networks:
       - dmatch-network
 
-  # ==================== 6. Company Service ====================
-
   company-service:
     build:
       context: ./company-service
       dockerfile: Dockerfile
     container_name: dmatch-company
+    profiles:
+      - app
     ports:
       - "8084:8080"
     environment:
@@ -202,13 +227,13 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 7. Job Service ====================
-
   job-service:
     build:
       context: ./job-service
       dockerfile: Dockerfile
     container_name: dmatch-job
+    profiles:
+      - app
     ports:
       - "8085:8080"
     environment:
@@ -230,13 +255,13 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 8. Review Service ====================
-
   review-service:
     build:
       context: ./review-service
       dockerfile: Dockerfile
     container_name: dmatch-review
+    profiles:
+      - app
     ports:
       - "8086:8080"
     environment:
@@ -258,13 +283,13 @@ services:
     networks:
       - dmatch-network
 
-  # ==================== 9. File Storage Service ====================
-
   file-storage-service:
     build:
       context: ./file-storage-service
       dockerfile: Dockerfile
     container_name: dmatch-file-storage
+    profiles:
+      - app
     ports:
       - "8087:8080"
     environment:
@@ -285,10 +310,26 @@ services:
     networks:
       - dmatch-network
 
+  # ==================== Frontend (profile: full) ====================
+
+  frontend:
+    build:
+      context: ./Dmatch-frontend
+      dockerfile: Dockerfile
+    container_name: dmatch-frontend
+    profiles:
+      - full
+    ports:
+      - "3000:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - dmatch-network
+
 volumes:
   postgres_data:
   kafka_data:
-
 
 networks:
   dmatch-network:

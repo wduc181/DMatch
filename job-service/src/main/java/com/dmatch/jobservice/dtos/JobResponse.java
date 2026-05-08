@@ -2,6 +2,7 @@ package com.dmatch.jobservice.dtos;
 
 import com.dmatch.jobservice.entities.Job;
 import com.dmatch.jobservice.entities.JobCategory;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,6 +26,13 @@ public class JobResponse {
     private Long salaryMax;
     private String currency;
     private Long companyId;
+
+    @JsonProperty("company_name")
+    private String companyName;
+
+    @JsonProperty("company_logo_url")
+    private String companyLogoUrl;
+
     private JobLevelResponse jobLevel;
     private List<JobCategoryResponse> categories;
     private LocalDateTime createdAt;
@@ -52,6 +60,31 @@ public class JobResponse {
                 .salaryMax(job.getSalaryMax())
                 .currency(job.getCurrency())
                 .companyId(job.getCompanyId())
+                .jobLevel(job.getJobLevel() == null ? null : JobLevelResponse.fromJobLevel(job.getJobLevel()))
+                .categories(mapCategories(job.getCategories()))
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Overload: build JobResponse với company info đã enriched.
+     */
+    public static JobResponse fromJob(Job job, String companyName, String companyLogoUrl) {
+        return JobResponse.builder()
+                .id(job.getId())
+                .title(job.getTitle())
+                .description(job.getDescription())
+                .requirements(job.getRequirements())
+                .location(job.getLocation())
+                .jobType(job.getJobType())
+                .status(job.getStatus())
+                .salaryMin(job.getSalaryMin())
+                .salaryMax(job.getSalaryMax())
+                .currency(job.getCurrency())
+                .companyId(job.getCompanyId())
+                .companyName(companyName)
+                .companyLogoUrl(companyLogoUrl)
                 .jobLevel(job.getJobLevel() == null ? null : JobLevelResponse.fromJobLevel(job.getJobLevel()))
                 .categories(mapCategories(job.getCategories()))
                 .createdAt(job.getCreatedAt())

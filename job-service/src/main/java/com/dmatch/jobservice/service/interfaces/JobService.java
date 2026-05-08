@@ -9,6 +9,7 @@ import com.dmatch.jobservice.dtos.JobUpdateRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Map;
 
 public interface JobService {
 	JobResponse createJob(JobCreateRequest request, Long companyId);
@@ -23,4 +24,6 @@ public interface JobService {
 
 	List<JobLevelResponse> getJobLevels();
 	List<JobCategoryResponse> getJobCategories();
+
+	Map<Long, Integer> countActiveJobsByCompanyIds(List<Long> companyIds);
 }

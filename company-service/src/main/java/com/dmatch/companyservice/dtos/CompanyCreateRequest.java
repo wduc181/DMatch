@@ -24,7 +24,12 @@ public class CompanyCreateRequest {
     @JsonProperty("logo_key")
     private String logoKey;
 
+    @JsonProperty("cover_key")
+    private String coverKey;
+
     private String website;
+
+    private String industry;
 
     @JsonProperty("employee_size")
     @Min(value = 1, message = "Employee size must be at least 1")

@@ -21,7 +21,12 @@ public class CompanyUpdateRequest {
     @JsonProperty("logo_key")
     private String logoKey;
 
+    @JsonProperty("cover_key")
+    private String coverKey;
+
     private String website;
+
+    private String industry;
 
     @JsonProperty("employee_size")
     @Min(value = 1)
