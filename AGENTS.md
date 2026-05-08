@@ -28,8 +28,14 @@
 ## Key Commands
 
 ```bash
-# Chạy toàn bộ hệ thống (khuyến nghị)
-docker compose up
+# Chạy hạ tầng tối thiểu (postgres, kafka, discovery, config, gateway)
+docker compose --profile infra up
+
+# Chạy infra + toàn bộ backend services
+docker compose --profile infra --profile app up
+
+# Chạy toàn bộ hệ thống (infra + app + frontend)
+docker compose --profile infra --profile app --profile full up
 
 # Xem log một service cụ thể
 docker compose logs -f <service-name>
