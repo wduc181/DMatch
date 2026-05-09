@@ -5,6 +5,7 @@ import com.dmatch.jobservice.dtos.JobResponse;
 import com.dmatch.jobservice.service.interfaces.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("${app.internal-prefix}/jobs")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('INTERNAL_SERVICE')")
 public class InternalJobController {
 
      private final JobService jobService;
