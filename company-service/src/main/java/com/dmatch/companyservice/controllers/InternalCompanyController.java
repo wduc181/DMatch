@@ -5,6 +5,7 @@ import com.dmatch.companyservice.dtos.CompanyResponse;
 import com.dmatch.companyservice.services.interfaces.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("${app.internal-prefix}/companies")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('INTERNAL_SERVICE')")
 public class InternalCompanyController {
 
      private final CompanyService companyService;
