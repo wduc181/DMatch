@@ -1,5 +1,6 @@
 package com.dmatch.filestorageservice.security;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,13 @@ public class InternalServiceAuthFilter extends OncePerRequestFilter {
 
     @Value("${app.internal-service-key}")
     private String internalServiceKey;
+
+    @PostConstruct
+    void validateInternalServiceKey() {
+        if (internalServiceKey == null || internalServiceKey.isBlank()) {
+            throw new IllegalStateException("app.internal-service-key must be configured");
+        }
+    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,

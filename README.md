@@ -128,8 +128,10 @@ docker compose version
 Create a `.env` file in the project root:
 
 ```env
-JWT_SECRET=your_jwt_secret
+DB_USERNAME=postgres
 DB_PASSWORD=your_database_password
+JWT_SECRET=your_jwt_secret
+INTERNAL_SERVICE_KEY=your_internal_service_key
 ```
 
 Do not commit real secrets to the repository.

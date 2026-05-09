@@ -2,6 +2,7 @@ package com.dmatch.companyservice.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,13 @@ public class InternalServiceAuthFilter extends OncePerRequestFilter {
 
     @Value("${app.internal-service-key}")
     private String internalServiceKey;
+
+    @PostConstruct
+    void validateInternalServiceKey() {
+        if (internalServiceKey == null || internalServiceKey.isBlank()) {
+            throw new IllegalStateException("app.internal-service-key must be configured");
+        }
+    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
