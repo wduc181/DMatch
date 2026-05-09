@@ -28,5 +28,5 @@ export const JOB_TYPES = [
      { value: 'PART_TIME', label: 'Bán thời gian' },
      { value: 'CONTRACT', label: 'Hợp đồng' },
      { value: 'INTERNSHIP', label: 'Thực tập' },
-     { value: 'REMOTE', label: 'Từ xa' },
+     { value: 'FREELANCE', label: 'Freelance' },
 ];

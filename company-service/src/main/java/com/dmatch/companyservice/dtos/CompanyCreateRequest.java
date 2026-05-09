@@ -1,5 +1,6 @@
 package com.dmatch.companyservice.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -36,5 +37,7 @@ public class CompanyCreateRequest {
     private Integer employeeSize;
 
     @NotNull(message = "Owner ID is required")
+    @JsonProperty("owner_id")
+    @JsonAlias("ownerId")
     private Long ownerId;
 }

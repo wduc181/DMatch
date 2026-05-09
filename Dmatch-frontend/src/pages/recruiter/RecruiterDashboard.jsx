@@ -93,7 +93,7 @@ const RecruiterDashboard = () => {
 
      // Compute stats
      const jobs = jobsData?.content || [];
-     const publishedJobs = jobs.filter((j) => j.status === 'PUBLISHED' || j.status === 'ACTIVE');
+     const publishedJobs = jobs.filter((j) => j.status === 'ACTIVE');
      const draftJobs = jobs.filter((j) => j.status === 'DRAFT');
      const recentJobs = [...jobs]
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -188,10 +188,10 @@ const RecruiterDashboard = () => {
                                                        </div>
                                                   </div>
                                                   <Badge
-                                                       variant={job.status === 'PUBLISHED' || job.status === 'ACTIVE' ? 'default' : 'secondary'}
+                                                      variant={job.status === 'ACTIVE' ? 'default' : 'secondary'}
                                                        className="ml-3 shrink-0"
                                                   >
-                                                       {job.status === 'PUBLISHED' || job.status === 'ACTIVE' ? 'Đang hiển thị' : 'Nháp'}
+                                                      {job.status === 'ACTIVE' ? 'Đang hiển thị' : 'Nháp'}
                                                   </Badge>
                                              </div>
                                         ))}

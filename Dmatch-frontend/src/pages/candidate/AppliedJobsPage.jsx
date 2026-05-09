@@ -40,7 +40,7 @@ const JOB_TYPE_LABELS = {
      PART_TIME: 'Bán thời gian',
      CONTRACT: 'Hợp đồng',
      INTERNSHIP: 'Thực tập',
-     REMOTE: 'Từ xa',
+     FREELANCE: 'Freelance',
 };
 
 // ==================== Stat Card ====================

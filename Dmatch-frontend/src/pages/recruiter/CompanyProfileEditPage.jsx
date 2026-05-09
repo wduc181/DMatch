@@ -133,7 +133,7 @@ const CompanyProfileEditPage = () => {
                };
 
                if (isNewCompany) {
-                    await createCompany({ ...payload, ownerId: user.id });
+                    await createCompany({ ...payload, owner_id: user.id });
                     setIsNewCompany(false);
                     setToast({ type: 'success', message: 'Tạo hồ sơ công ty thành công!' });
                } else {

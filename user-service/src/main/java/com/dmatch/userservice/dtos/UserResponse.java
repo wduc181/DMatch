@@ -2,6 +2,7 @@ package com.dmatch.userservice.dtos;
 
 import com.dmatch.userservice.entities.Role;
 import com.dmatch.userservice.entities.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,9 +17,14 @@ import java.util.stream.Collectors;
 public class UserResponse {
     private Long id;
     private String email;
+
+    @JsonProperty("full_name")
     private String fullName;
+
     private String status;
     private List<String> roles;
+
+    @JsonProperty("created_at")
     private LocalDateTime createdAt;
 
     private static List<String> mapRoles(Set<Role> roles) {

@@ -64,6 +64,9 @@ const formatDate = (value) => {
      return DATE_FORMATTER.format(new Date(value));
 };
 
+const getFullName = (user) => user.full_name || user.fullName || '';
+const getCreatedAt = (user) => user.created_at || user.createdAt;
+
 const UserManagementPage = () => {
      const [searchValue, setSearchValue] = useState('');
      const [roleFilter, setRoleFilter] = useState('ALL');
@@ -75,7 +78,10 @@ const UserManagementPage = () => {
 
      // Fetch users từ API
      const { data: usersResponse, isLoading, isError, refetch } = useAdminUsers();
-     const users = usersResponse?.data?.content || [];
+     const users = useMemo(() => {
+          const usersPayload = usersResponse?.data;
+          return Array.isArray(usersPayload) ? usersPayload : usersPayload?.content || [];
+     }, [usersResponse]);
 
      // Toggle status mutation
      const toggleStatusMutation = useToggleAdminUserStatus();
@@ -87,14 +93,14 @@ const UserManagementPage = () => {
                .filter((user) => {
                     const matchesKeyword = !keyword
                          || user.email?.toLowerCase().includes(keyword)
-                         || user.full_name?.toLowerCase().includes(keyword);
+                         || getFullName(user).toLowerCase().includes(keyword);
 
                     const matchesRole = roleFilter === 'ALL' || user.roles?.includes(roleFilter);
                     const matchesStatus = statusFilter === 'ALL' || user.status === statusFilter;
 
                     return matchesKeyword && matchesRole && matchesStatus;
                })
-               .sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0));
+               .sort((left, right) => new Date(getCreatedAt(right) || 0) - new Date(getCreatedAt(left) || 0));
      }, [users, deferredSearch, roleFilter, statusFilter]);
 
      const handleToggleStatus = async () => {
@@ -242,7 +248,7 @@ const UserManagementPage = () => {
                                                   <TableCell className="font-medium text-foreground">#{user.id}</TableCell>
                                                   <TableCell>
                                                        <div>
-                                                            <p className="font-medium text-foreground">{user.full_name || 'Chưa cập nhật'}</p>
+                                                            <p className="font-medium text-foreground">{getFullName(user) || 'Chưa cập nhật'}</p>
                                                        </div>
                                                   </TableCell>
                                                   <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
@@ -253,7 +259,7 @@ const UserManagementPage = () => {
                                                        <UserStatusBadge status={user.status} />
                                                   </TableCell>
                                                   <TableCell className="text-sm text-muted-foreground">
-                                                       {formatDate(user.created_at)}
+                                                       {formatDate(getCreatedAt(user))}
                                                   </TableCell>
                                                   <TableCell>
                                                        <UserActionMenu
@@ -283,7 +289,7 @@ const UserManagementPage = () => {
                               <div className="space-y-4 text-sm">
                                    <div className="rounded-xl border bg-muted/30 p-4">
                                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Họ và tên</p>
-                                        <p className="mt-1 text-base font-semibold text-foreground">{selectedUser.full_name || 'Chưa cập nhật'}</p>
+                                        <p className="mt-1 text-base font-semibold text-foreground">{getFullName(selectedUser) || 'Chưa cập nhật'}</p>
                                    </div>
 
                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -293,7 +299,7 @@ const UserManagementPage = () => {
                                         </div>
                                         <div className="rounded-xl border p-4">
                                              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ngày tạo</p>
-                                             <p className="mt-1 text-foreground">{formatDate(selectedUser.created_at)}</p>
+                                             <p className="mt-1 text-foreground">{formatDate(getCreatedAt(selectedUser))}</p>
                                         </div>
                                    </div>
 

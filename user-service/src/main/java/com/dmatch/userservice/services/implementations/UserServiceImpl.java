@@ -188,8 +188,10 @@ public class UserServiceImpl implements UserService {
             profile.setPhoneNumber(request.getPhoneNumber());
         if (request.getDateOfBirth() != null)
             profile.setDateOfBirth(request.getDateOfBirth());
-        if (request.getGender() != null)
-            profile.setGender(request.getGender());
+        if (request.getGender() != null) {
+            String gender = request.getGender().trim();
+            profile.setGender(gender.isEmpty() ? null : gender);
+        }
         if (request.getAddress() != null)
             profile.setAddress(request.getAddress());
         if (request.getBio() != null)

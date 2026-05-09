@@ -3,6 +3,16 @@ import { create } from 'zustand';
 const TOKEN_KEY = 'dmatch_token';
 const USER_KEY = 'dmatch_user';
 
+const normalizeUser = (userData) => {
+     if (!userData) return userData;
+
+     return {
+          ...userData,
+          fullName: userData.fullName ?? userData.full_name ?? '',
+          createdAt: userData.createdAt ?? userData.created_at,
+     };
+};
+
 /**
  * Auth Store — quản lý trạng thái xác thực xuyên suốt ứng dụng.
  *
@@ -29,10 +39,11 @@ const useAuthStore = create((set) => ({
       * @param {string} token — accessToken từ AuthResponse
       */
      login: (userData, token) => {
+          const user = normalizeUser(userData);
           localStorage.setItem(TOKEN_KEY, token);
-          localStorage.setItem(USER_KEY, JSON.stringify(userData));
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
           set({
-               user: userData,
+               user,
                token,
                isAuthenticated: true,
                isLoading: false,
@@ -63,7 +74,7 @@ const useAuthStore = create((set) => ({
 
           if (token && userStr) {
                try {
-                    const user = JSON.parse(userStr);
+                    const user = normalizeUser(JSON.parse(userStr));
                     set({
                          user,
                          token,
