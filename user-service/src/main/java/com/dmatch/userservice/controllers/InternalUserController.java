@@ -6,13 +6,18 @@ import com.dmatch.userservice.dtos.InternalUserResponse;
 import com.dmatch.userservice.dtos.UserResponse;
 import com.dmatch.userservice.services.interfaces.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("${app.internal-prefix}/users")
 @RequiredArgsConstructor
+@Validated
+@PreAuthorize("hasRole('INTERNAL_SERVICE')")
 public class InternalUserController {
     private final UserService userService;
 
@@ -29,7 +34,7 @@ public class InternalUserController {
 
     @GetMapping("/by-email")
     public ResponseEntity<ApiResponse<InternalUserResponse>> getUserByEmail(
-            @RequestParam String email
+            @RequestParam @Email String email
     ) {
         InternalUserResponse user = userService.getUserByEmail(email);
         return ResponseEntity.ok(ApiResponse.<InternalUserResponse>builder()

@@ -115,7 +115,7 @@ export const useDeleteJob = () => {
 };
 
 /**
- * Mutation: thay đổi trạng thái job (DRAFT ↔ PUBLISHED).
+ * Mutation: thay đổi trạng thái job (DRAFT ↔ ACTIVE).
  */
 export const useChangeJobStatus = () => {
      const queryClient = useQueryClient();

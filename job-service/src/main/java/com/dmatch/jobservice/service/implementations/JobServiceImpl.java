@@ -484,7 +484,7 @@ public class JobServiceImpl implements JobService {
             return Collections.emptyMap();
         }
 
-        List<Object[]> results = jobRepository.countByCompanyIdInAndStatus(companyIds, "ACTIVE");
+        List<Object[]> results = jobRepository.countByCompanyIdInAndStatus(companyIds, JobStatus.ACTIVE.name());
 
         return results.stream().collect(Collectors.toMap(
                 row -> (Long) row[0],

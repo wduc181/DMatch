@@ -20,11 +20,21 @@ public class JobResponse {
     private String description;
     private String requirements;
     private String location;
+
+    @JsonProperty("job_type")
     private String jobType;
+
     private String status;
+
+    @JsonProperty("salary_min")
     private Long salaryMin;
+
+    @JsonProperty("salary_max")
     private Long salaryMax;
+
     private String currency;
+
+    @JsonProperty("company_id")
     private Long companyId;
 
     @JsonProperty("company_name")
@@ -33,9 +43,15 @@ public class JobResponse {
     @JsonProperty("company_logo_url")
     private String companyLogoUrl;
 
+    @JsonProperty("job_level")
     private JobLevelResponse jobLevel;
+
     private List<JobCategoryResponse> categories;
+
+    @JsonProperty("created_at")
     private LocalDateTime createdAt;
+
+    @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
 
     private static List<JobCategoryResponse> mapCategories(Set<JobCategory> categories) {

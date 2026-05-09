@@ -38,7 +38,6 @@ const formatDate = (dateStr) => {
 };
 
 const STATUS_CONFIG = {
-     PUBLISHED: { label: 'Đang hiển thị', variant: 'default' },
      ACTIVE: { label: 'Đang hiển thị', variant: 'default' },
      DRAFT: { label: 'Bản nháp', variant: 'secondary' },
      CLOSED: { label: 'Đã đóng', variant: 'outline' },
@@ -49,7 +48,7 @@ const JOB_TYPE_LABELS = {
      PART_TIME: 'Bán thời gian',
      CONTRACT: 'Hợp đồng',
      INTERNSHIP: 'Thực tập',
-     REMOTE: 'Từ xa',
+     FREELANCE: 'Freelance',
 };
 
 const ManageJobsPage = () => {
@@ -89,7 +88,7 @@ const ManageJobsPage = () => {
      );
 
      const handleToggleStatus = async (job) => {
-          const currentActive = job.status === 'PUBLISHED' || job.status === 'ACTIVE';
+          const currentActive = job.status === 'ACTIVE';
           const newStatus = currentActive ? 'DRAFT' : 'ACTIVE';
           try {
                await changeStatusMutation.mutateAsync({
@@ -303,7 +302,7 @@ const ManageJobsPage = () => {
                                                                            onClick={() => handleToggleStatus(job)}
                                                                            disabled={changeStatusMutation.isPending}
                                                                       >
-                                                                           {job.status === 'PUBLISHED' || job.status === 'ACTIVE' ? (
+                                                                           {job.status === 'ACTIVE' ? (
                                                                                 <>
                                                                                      <ToggleLeft size={14} />
                                                                                      Chuyển sang Nháp

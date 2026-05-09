@@ -37,19 +37,19 @@ spring:
         - id: file-storage-service
           uri: lb://FILE-STORAGE-SERVICE
           predicates:
-            - Path=/api/v1/files/**, /internal/files/**
+            - Path=/api/v1/files/**
         - id: review-service
           uri: lb://REVIEW-SERVICE
           predicates:
-            - Path=/api/v1/reviews/**, /internal/reviews/**
+            - Path=/api/v1/reviews/**
         - id: job-service
           uri: lb://JOB-SERVICE
           predicates:
-            - Path=/api/v1/jobs/**, /internal/jobs/**
+            - Path=/api/v1/jobs/**
         - id: company-service
           uri: lb://COMPANY-SERVICE
           predicates:
-            - Path=/api/v1/companies/**, /internal/companies/**
+            - Path=/api/v1/companies/**
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
@@ -57,7 +57,7 @@ spring:
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
-            - Path=/internal/users/**, /api/v1/users/**, /api/v1/admin/users/**
+            - Path=/api/v1/users/**, /api/v1/admin/users/**
 
 eureka:
   client:

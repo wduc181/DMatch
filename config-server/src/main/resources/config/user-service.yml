@@ -8,7 +8,7 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -18,11 +18,12 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: debug
+    org.hibernate.SQL: warn
 
 app:
   api-prefix: /api/v1
   internal-prefix: /internal
+  internal-service-key: ${INTERNAL_SERVICE_KEY}
 
 eureka:
   instance:
