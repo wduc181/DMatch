@@ -102,6 +102,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new DataNotFoundException("Current user not found"));
 
+        if (!UserStatus.ACTIVE.equals(user.getStatus())) {
+            throw new PermissionDeniedException("User account is not active");
+        }
+
         return UserResponse.fromUser(user);
 
     }
@@ -380,8 +384,13 @@ public class UserServiceImpl implements UserService {
             throw new PermissionDeniedException("User is not logged in");
         }
         String email = authentication.getName();
-        return userRepository.findByEmailIgnoreCase(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new DataNotFoundException("Current user not found"));
+
+        if (!UserStatus.ACTIVE.equals(user.getStatus())) {
+            throw new PermissionDeniedException("User account is not active");
+        }
+        return user;
     }
 
     private String normalizeEmail(String email) {
