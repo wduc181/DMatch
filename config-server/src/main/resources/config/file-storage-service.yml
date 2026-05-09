@@ -35,6 +35,7 @@ logging:
 app:
   api-prefix: /api/v1
   internal-prefix: /internal
+  internal-service-key: ${INTERNAL_SERVICE_KEY:changeme-internal-key}
   kafka:
     topics:
       file-delete: file-delete-requested
