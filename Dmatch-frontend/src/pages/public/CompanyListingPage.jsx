@@ -14,6 +14,7 @@ import {
      PaginationEllipsis,
 } from '@/components/ui/pagination';
 import { getCompanies } from '@/services/company.service';
+import { pageContent, pageTotalElements, pageTotalPages, unwrapApiResponse } from '@/lib/apiResponse';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -86,9 +87,10 @@ const CompanyListingPage = () => {
           keepPreviousData: true,
      });
 
-     const companies = companiesResponse?.data?.data?.content || [];
-     const totalElements = companiesResponse?.data?.data?.total_elements || 0;
-     const totalPages = companiesResponse?.data?.data?.total_pages || 1;
+     const companiesPage = unwrapApiResponse(companiesResponse);
+     const companies = pageContent(companiesPage);
+     const totalElements = pageTotalElements(companiesPage);
+     const totalPages = pageTotalPages(companiesPage);
 
      const handleFilterChange = (field, value) => {
           setFilters((prev) => ({ ...prev, [field]: value }));
@@ -104,7 +106,7 @@ const CompanyListingPage = () => {
           setSearchParams(params, { replace: true });
      }, [filters, setSearchParams]);
 
-     const handlePageChange = useCallback((page) => {
+     const handlePageChange = (page) => {
           if (page >= 1 && page <= totalPages) {
                const params = new URLSearchParams(searchParams);
                if (page > 1) {
@@ -116,7 +118,7 @@ const CompanyListingPage = () => {
                // Scroll to top of grid
                window.scrollTo({ top: 280, behavior: 'smooth' });
           }
-     }, [totalPages, searchParams, setSearchParams]);
+     };
 
      return (
           <>

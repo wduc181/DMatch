@@ -9,6 +9,7 @@ const normalizeUser = (userData) => {
      return {
           ...userData,
           fullName: userData.fullName ?? userData.full_name ?? '',
+          roles: (userData.roles ?? []).map((role) => role.replace(/^ROLE_/, '')),
           createdAt: userData.createdAt ?? userData.created_at,
      };
 };

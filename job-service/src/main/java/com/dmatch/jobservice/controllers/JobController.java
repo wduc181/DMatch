@@ -20,7 +20,7 @@ public class JobController {
     private final JobService jobService;
 
     @PostMapping("/jobs")
-	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+	@PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> createJob(
 	    @RequestParam("company_id") Long companyId,
 	    @Valid @RequestBody JobCreateRequest request
@@ -34,7 +34,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}")
-	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+	@PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> updateJob(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -112,7 +112,7 @@ public class JobController {
 	}
 
     @PutMapping("/jobs/{id}/status")
-	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+	@PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> changeJobStatus(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -127,7 +127,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}/level")
-	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+	@PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> setJobLevel(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -142,7 +142,7 @@ public class JobController {
     }
 
     @PutMapping("/jobs/{id}/categories")
-	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+	@PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<JobResponse>> setJobCategories(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId,
@@ -157,7 +157,7 @@ public class JobController {
     }
 
     @DeleteMapping("/jobs/{id}")
-	@PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+	@PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteJob(
 	    @PathVariable Long id,
 	    @RequestParam("company_id") Long companyId

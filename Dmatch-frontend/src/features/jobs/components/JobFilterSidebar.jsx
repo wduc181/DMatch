@@ -22,35 +22,6 @@ const FILTER_LOCATIONS = [
 ];
 
 /**
- * Cấp bậc — match JobLevelResponse codes từ backend.
- */
-const FILTER_LEVELS = [
-     { value: 'INTERN', label: 'Thực tập sinh' },
-     { value: 'FRESHER', label: 'Fresher' },
-     { value: 'JUNIOR', label: 'Junior' },
-     { value: 'MIDDLE', label: 'Middle' },
-     { value: 'SENIOR', label: 'Senior' },
-];
-
-/**
- * Kỹ năng phổ biến — match JobCategoryResponse codes.
- */
-const FILTER_SKILLS = [
-     { value: 'BACKEND', label: 'Backend' },
-     { value: 'FRONTEND', label: 'Frontend' },
-     { value: 'FULLSTACK', label: 'Fullstack' },
-     { value: 'JAVA', label: 'Java' },
-     { value: 'SPRING_BOOT', label: 'Spring Boot' },
-     { value: 'REACT', label: 'React' },
-     { value: 'PYTHON', label: 'Python' },
-     { value: 'NODEJS', label: 'Node.js' },
-     { value: 'MICROSERVICES', label: 'Microservices' },
-     { value: 'DATA_ENGINEERING', label: 'Data Engineering' },
-     { value: 'DEVOPS', label: 'DevOps' },
-     { value: 'AWS', label: 'AWS' },
-];
-
-/**
  * Config cho salary slider (đơn vị: triệu VND).
  */
 const SALARY_MIN = 0;
@@ -68,17 +39,31 @@ const formatSalaryLabel = (value) => `${value}M`;
  *
  * @param {Object} props
  * @param {Object} props.filters - { locations: string[], levels: string[], skills: string[], salaryRange: [number, number] }
+ * @param {Array} props.levelOptions - JobLevelResponse[] từ backend.
+ * @param {Array} props.categoryOptions - JobCategoryResponse[] từ backend.
  * @param {Function} props.onFilterChange - (key, value) => void
  * @param {Function} props.onClearFilters - () => void
  */
-const JobFilterSidebar = ({ filters, onFilterChange, onClearFilters }) => {
+const JobFilterSidebar = ({ filters, levelOptions = [], categoryOptions = [], onFilterChange, onClearFilters }) => {
      const { locations = [], levels = [], skills = [], salaryRange = [SALARY_MIN, SALARY_MAX] } = filters;
+     const filterLevels = levelOptions.map((level) => ({
+          value: String(level.id),
+          label: level.name,
+     }));
+     const filterSkills = categoryOptions.map((category) => ({
+          value: String(category.id),
+          label: category.name,
+     }));
 
      /**
       * Toggle một giá trị trong mảng checkbox (locations, levels).
       */
      const handleCheckboxToggle = (key, value) => {
           const current = filters[key] || [];
+          if (key === 'levels') {
+               onFilterChange(key, current.includes(value) ? [] : [value]);
+               return;
+          }
           const next = current.includes(value)
                ? current.filter((v) => v !== value)
                : [...current, value];
@@ -169,7 +154,7 @@ const JobFilterSidebar = ({ filters, onFilterChange, onClearFilters }) => {
                          </AccordionTrigger>
                          <AccordionContent>
                               <div className="space-y-3">
-                                   {FILTER_LEVELS.map((lvl) => (
+                                   {filterLevels.map((lvl) => (
                                         <div key={lvl.value} className="flex items-center gap-2">
                                              <Checkbox
                                                   id={`lvl-${lvl.value}`}
@@ -181,9 +166,12 @@ const JobFilterSidebar = ({ filters, onFilterChange, onClearFilters }) => {
                                                   className="text-sm font-normal cursor-pointer"
                                              >
                                                   {lvl.label}
-                                             </Label>
+                                            </Label>
                                         </div>
                                    ))}
+                                   {filterLevels.length === 0 && (
+                                        <p className="text-xs text-muted-foreground">Chưa có dữ liệu cấp bậc.</p>
+                                   )}
                               </div>
                          </AccordionContent>
                     </AccordionItem>
@@ -198,7 +186,7 @@ const JobFilterSidebar = ({ filters, onFilterChange, onClearFilters }) => {
                          </AccordionTrigger>
                          <AccordionContent>
                               <div className="flex flex-wrap gap-2">
-                                   {FILTER_SKILLS.map((skill) => {
+                                   {filterSkills.map((skill) => {
                                         const isActive = skills.includes(skill.value);
                                         return (
                                              <Badge
@@ -211,6 +199,9 @@ const JobFilterSidebar = ({ filters, onFilterChange, onClearFilters }) => {
                                              </Badge>
                                         );
                                    })}
+                                   {filterSkills.length === 0 && (
+                                        <p className="text-xs text-muted-foreground">Chưa có dữ liệu kỹ năng.</p>
+                                   )}
                               </div>
                          </AccordionContent>
                     </AccordionItem>

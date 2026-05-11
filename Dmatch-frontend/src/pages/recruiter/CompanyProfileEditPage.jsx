@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import useAuthStore from '@/store/useAuthStore';
 import { getCompanyByOwnerId, createCompany, updateCompany } from '@/services/company.service';
+import { getMeApi } from '@/services/auth.service';
 
 // ==================== Zod Schema ====================
 const companySchema = z.object({
@@ -59,6 +60,8 @@ const INDUSTRY_OPTIONS = [
 
 const CompanyProfileEditPage = () => {
      const user = useAuthStore((s) => s.user);
+     const token = useAuthStore((s) => s.token);
+     const login = useAuthStore((s) => s.login);
      const [isLoading, setIsLoading] = useState(true);
      const [isSaving, setIsSaving] = useState(false);
      const [isNewCompany, setIsNewCompany] = useState(false);
@@ -81,7 +84,15 @@ const CompanyProfileEditPage = () => {
      // Fetch company on mount
      useEffect(() => {
           const fetchCompany = async () => {
-               if (!user?.id) return;
+               if (!user?.id) {
+                    setIsLoading(false);
+                    return;
+               }
+               if (!user.roles?.some((role) => ['COMPANY', 'ADMIN'].includes(role))) {
+                    setIsNewCompany(true);
+                    setIsLoading(false);
+                    return;
+               }
                try {
                     const res = await getCompanyByOwnerId(user.id);
                     const data = res.data.data;
@@ -134,6 +145,8 @@ const CompanyProfileEditPage = () => {
 
                if (isNewCompany) {
                     await createCompany({ ...payload, owner_id: user.id });
+                    const userRes = await getMeApi();
+                    login(userRes.data ?? userRes, token);
                     setIsNewCompany(false);
                     setToast({ type: 'success', message: 'Tạo hồ sơ công ty thành công!' });
                } else {

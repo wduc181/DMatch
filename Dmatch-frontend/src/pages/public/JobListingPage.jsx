@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/sheet';
 import JobFilterSidebar from '@/features/jobs/components/JobFilterSidebar';
 import JobListContent from '@/features/jobs/components/JobListContent';
-import { getJobs } from '@/services/job.service';
+import { getJobs, getJobCategories, getJobLevels } from '@/services/job.service';
+import { pageContent, pageTotalElements, pageTotalPages, unwrapApiResponse } from '@/lib/apiResponse';
 
 /**
  * Số lượng job mỗi trang — match backend default `limit=10`.
@@ -34,11 +35,20 @@ const DEFAULT_FILTERS = {
  * Parse search params thành filters object.
  * Giữ state trên URL để người dùng có thể share link.
  */
+const getParamValues = (searchParams, ...names) => (
+     names.flatMap((name) =>
+          searchParams
+               .getAll(name)
+               .flatMap((value) => value.split(','))
+               .filter(Boolean)
+     )
+);
+
 const parseFiltersFromParams = (searchParams) => ({
      keyword: searchParams.get('keyword') || '',
-     locations: searchParams.getAll('location'),
-     levels: searchParams.getAll('level'),
-     skills: searchParams.getAll('skill'),
+     locations: getParamValues(searchParams, 'location'),
+     levels: getParamValues(searchParams, 'level', 'job_level_id'),
+     skills: getParamValues(searchParams, 'skill', 'category_ids'),
      salaryRange: [
           Number(searchParams.get('salary_min')) || DEFAULT_FILTERS.salaryRange[0],
           Number(searchParams.get('salary_max')) || DEFAULT_FILTERS.salaryRange[1],
@@ -56,8 +66,8 @@ const buildSearchParams = (filters) => {
      if (filters.keyword) params.set('keyword', filters.keyword);
 
      filters.locations.forEach((v) => params.append('location', v));
-     filters.levels.forEach((v) => params.append('level', v));
-     filters.skills.forEach((v) => params.append('skill', v));
+     filters.levels.forEach((v) => params.append('job_level_id', v));
+     filters.skills.forEach((v) => params.append('category_ids', v));
 
      if (filters.salaryRange[0] !== DEFAULT_FILTERS.salaryRange[0]) {
           params.set('salary_min', String(filters.salaryRange[0]));
@@ -84,7 +94,7 @@ const buildApiParams = (filters) => {
 
      if (filters.keyword) params.keyword = filters.keyword;
      if (filters.locations.length > 0) params.location = filters.locations[0];
-     if (filters.levels.length > 0) params.job_level_id = filters.levels.join(',');
+     if (filters.levels.length > 0) params.job_level_id = filters.levels[0];
      if (filters.skills.length > 0) params.category_ids = filters.skills.join(',');
 
      // Salary range (slider đơn vị triệu, API nhận đồng)
@@ -95,14 +105,7 @@ const buildApiParams = (filters) => {
           params.salary_max = filters.salaryRange[1] * 1000000;
      }
 
-     // Sort
-     if (filters.sortBy === 'salary_desc') {
-          params.sort = 'salary_max,desc';
-     } else if (filters.sortBy === 'salary_asc') {
-          params.sort = 'salary_min,asc';
-     } else {
-          params.sort = 'created_at,desc';
-     }
+     if (filters.sortBy && filters.sortBy !== 'newest') params.sort = filters.sortBy;
 
      return params;
 };
@@ -123,9 +126,24 @@ const JobListingPage = () => {
           keepPreviousData: true,
      });
 
-     const jobs = jobsResponse?.data?.data?.content || [];
-     const totalJobs = jobsResponse?.data?.data?.total_elements || 0;
-     const totalPages = jobsResponse?.data?.data?.total_pages || 1;
+     const { data: levelsResponse } = useQuery({
+          queryKey: ['job-levels'],
+          queryFn: getJobLevels,
+          staleTime: 30 * 60 * 1000,
+     });
+
+     const { data: categoriesResponse } = useQuery({
+          queryKey: ['job-categories'],
+          queryFn: getJobCategories,
+          staleTime: 30 * 60 * 1000,
+     });
+
+     const jobsPage = unwrapApiResponse(jobsResponse);
+     const jobs = pageContent(jobsPage);
+     const totalJobs = pageTotalElements(jobsPage);
+     const totalPages = pageTotalPages(jobsPage);
+     const jobLevels = unwrapApiResponse(levelsResponse) || [];
+     const jobCategories = unwrapApiResponse(categoriesResponse) || [];
 
      /**
       * Cập nhật URL params khi thay đổi filter.
@@ -244,6 +262,8 @@ const JobListingPage = () => {
                                         <div className="px-4 pb-4">
                                              <JobFilterSidebar
                                                   filters={sidebarFilters}
+                                                  levelOptions={jobLevels}
+                                                  categoryOptions={jobCategories}
                                                   onFilterChange={handleFilterChange}
                                                   onClearFilters={handleClearFilters}
                                              />
@@ -262,6 +282,8 @@ const JobListingPage = () => {
                               <div className="sticky top-24">
                                    <JobFilterSidebar
                                         filters={sidebarFilters}
+                                        levelOptions={jobLevels}
+                                        categoryOptions={jobCategories}
                                         onFilterChange={handleFilterChange}
                                         onClearFilters={handleClearFilters}
                                    />

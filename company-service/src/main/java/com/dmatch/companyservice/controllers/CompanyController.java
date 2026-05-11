@@ -65,7 +65,7 @@ public class CompanyController {
         }
 
         @GetMapping("/by-owner/{ownerId}")
-        @PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+        @PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
         public ResponseEntity<ApiResponse<CompanyResponse>> getCompanyByOwnerId(
             @PathVariable Long ownerId
         ) {
@@ -78,7 +78,7 @@ public class CompanyController {
         }
 
         @PutMapping("/by-owner/{ownerId}")
-        @PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+        @PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
         public ResponseEntity<ApiResponse<CompanyResponse>> updateCompanyByOwnerId(
             @PathVariable Long ownerId,
             @Valid @RequestBody CompanyUpdateRequest request
@@ -92,7 +92,7 @@ public class CompanyController {
         }
 
         @DeleteMapping("/by-owner/{ownerId}")
-        @PreAuthorize("hasAnyRole('COMPANY','ADMIN')")
+        @PreAuthorize("hasAnyRole('USER','COMPANY','ADMIN')")
         public ResponseEntity<ApiResponse<Void>> deleteCompanyByOwnerId(
             @PathVariable Long ownerId
         ) {

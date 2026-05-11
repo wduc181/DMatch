@@ -49,14 +49,17 @@ const LoginPage = () => {
           try {
                // 1. Login → lấy accessToken
                const authRes = await loginApi(data);
-               const token = authRes.data.accessToken;
+               const token = authRes.data?.accessToken ?? authRes.accessToken;
+               if (!token) {
+                    throw new Error('Missing access token');
+               }
 
                // 2. Tạm lưu token → gọi getMeApi (interceptor sẽ tự gắn)
                useAuthStore.getState().login({ fullName: '' }, token);
 
                // 3. Lấy user info
                const userRes = await getMeApi();
-               const userData = userRes.data;
+               const userData = userRes.data ?? userRes;
 
                // 4. Cập nhật store với full user data
                login(userData, token);
