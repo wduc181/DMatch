@@ -1,10 +1,12 @@
+# syntax=docker/dockerfile:1.7
 FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+RUN chmod +x mvnw
 COPY src src
-RUN ./mvnw package -DskipTests -B
+RUN --mount=type=cache,id=dmatch-maven-repo,target=/root/.m2,sharing=locked \
+    ./mvnw package -DskipTests -B
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
