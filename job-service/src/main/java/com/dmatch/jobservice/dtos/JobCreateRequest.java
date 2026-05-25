@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -35,6 +36,9 @@ public class JobCreateRequest {
 
     @JsonProperty("currency")
     private String currency;
+
+    @JsonProperty("application_deadline")
+    private LocalDateTime applicationDeadline;
 
     @JsonProperty("job_level_id")
     private Long jobLevelId;

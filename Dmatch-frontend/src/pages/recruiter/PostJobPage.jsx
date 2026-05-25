@@ -47,6 +47,11 @@ const JOB_TYPES = [
      { value: 'FREELANCE', label: 'Freelance' },
 ];
 
+const toDateTimeLocalValue = (value) => {
+     if (!value) return '';
+     return value.slice(0, 16);
+};
+
 // ==================== Zod Schema ====================
 const jobSchema = z.object({
      title: z.string().min(1, 'Tiêu đề là bắt buộc').max(255, 'Tối đa 255 ký tự'),
@@ -65,6 +70,7 @@ const jobSchema = z.object({
           .pipe(z.number().min(0, 'Lương tối đa phải >= 0').nullable())
           .optional(),
      currency: z.string().optional(),
+     application_deadline: z.string().optional().or(z.literal('')),
      job_level_id: z.string().optional().or(z.literal('')),
      category_ids: z.array(z.number()).optional(),
 }).refine(
@@ -112,6 +118,7 @@ const PostJobPage = () => {
                salary_min: '',
                salary_max: '',
                currency: 'VND',
+               application_deadline: '',
                job_level_id: '',
                category_ids: [],
           },
@@ -129,6 +136,7 @@ const PostJobPage = () => {
                     salary_min: existingJob.salary_min ?? '',
                     salary_max: existingJob.salary_max ?? '',
                     currency: existingJob.currency || 'VND',
+                    application_deadline: toDateTimeLocalValue(existingJob.application_deadline),
                     job_level_id: existingJob.job_level?.id?.toString() || '',
                     category_ids: existingJob.categories?.map((c) => c.id) || [],
                });
@@ -155,6 +163,7 @@ const PostJobPage = () => {
                salary_min: data.salary_min || null,
                salary_max: data.salary_max || null,
                currency: data.currency || 'VND',
+               application_deadline: data.application_deadline || null,
                job_level_id: data.job_level_id ? Number(data.job_level_id) : null,
                category_ids: data.category_ids?.length ? data.category_ids : null,
           };
@@ -352,6 +361,23 @@ const PostJobPage = () => {
                                                             ))}
                                                        </SelectContent>
                                                   </Select>
+                                                  <FormMessage />
+                                             </FormItem>
+                                        )}
+                                   />
+
+                                   <FormField
+                                        control={form.control}
+                                        name="application_deadline"
+                                        render={({ field }) => (
+                                             <FormItem>
+                                                  <FormLabel>Hạn ứng tuyển</FormLabel>
+                                                  <FormControl>
+                                                       <Input type="datetime-local" className="w-full md:w-72" {...field} />
+                                                  </FormControl>
+                                                  <FormDescription>
+                                                       Để trống nếu tin tuyển dụng không có hạn ứng tuyển cụ thể.
+                                                  </FormDescription>
                                                   <FormMessage />
                                              </FormItem>
                                         )}

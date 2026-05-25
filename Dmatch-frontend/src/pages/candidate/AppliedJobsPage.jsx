@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
      ClipboardList, Search, Briefcase, MapPin, DollarSign, Clock,
-     Building2, Eye, ChevronRight,
+     Building2, Eye, ChevronRight, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import {
      Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import ApplicationStatusBadge, { STATUS_CONFIG } from '@/features/jobs/components/ApplicationStatusBadge';
-import { SAMPLE_CANDIDATE_APPLICATIONS } from '@/data/sampleData';
+import { useMyApplications } from '@/hooks/useApplications';
 
 // ==================== Helpers ====================
 const formatSalary = (min, max, currency = 'VND') => {
@@ -107,11 +107,8 @@ const AppliedJobsPage = () => {
      const [searchTerm, setSearchTerm] = useState('');
      const [statusFilter, setStatusFilter] = useState('all');
 
-     // TODO: Cần implement application-service backend trước
-     // Khi có API: const { data: applications, isLoading } = useMyApplications();
-     // Endpoint cần có: GET /api/v1/applications/me
-     const applications = SAMPLE_CANDIDATE_APPLICATIONS;
-     const isLoading = false;
+     const { data: applicationsData, isLoading } = useMyApplications({ page: 1, limit: 100 });
+     const applications = applicationsData?.content || [];
 
      // Filter
      const filteredApplications = useMemo(() => {
@@ -132,6 +129,14 @@ const AppliedJobsPage = () => {
           accepted: applications.filter((a) => a.status === 'ACCEPTED').length,
           rejected: applications.filter((a) => a.status === 'REJECTED').length,
      }), [applications]);
+
+     if (isLoading) {
+          return (
+               <div className="flex min-h-[60vh] items-center justify-center">
+                    <Loader2 size={32} className="animate-spin text-primary" />
+               </div>
+          );
+     }
 
      return (
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">

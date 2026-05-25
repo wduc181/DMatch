@@ -15,6 +15,7 @@ import com.dmatch.jobservice.commons.CurrencyCode;
 import com.dmatch.jobservice.commons.JobStatus;
 import com.dmatch.jobservice.commons.JobType;
 import com.dmatch.jobservice.repositories.JobCategoryRepository;
+import com.dmatch.jobservice.repositories.JobApplicationRepository;
 import com.dmatch.jobservice.repositories.JobLevelRepository;
 import com.dmatch.jobservice.repositories.JobRepository;
 import com.dmatch.jobservice.repositories.JobSpecification;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JobServiceImpl implements JobService {
     private final JobRepository jobRepository;
+    private final JobApplicationRepository jobApplicationRepository;
     private final JobLevelRepository jobLevelRepository;
     private final JobCategoryRepository jobCategoryRepository;
     private final CompanyClient companyClient;
@@ -75,6 +77,7 @@ public class JobServiceImpl implements JobService {
                 .salaryMax(request.getSalaryMax())
                 .currency(currency)
                 .companyId(companyId)
+                .applicationDeadline(request.getApplicationDeadline())
                 .build();
 
         if (request.getJobLevelId() != null) {
@@ -140,6 +143,9 @@ public class JobServiceImpl implements JobService {
         }
         if (request.getCurrency() != null) {
             job.setCurrency(normalizeCurrency(request.getCurrency()));
+        }
+        if (request.getApplicationDeadline() != null) {
+            job.setApplicationDeadline(request.getApplicationDeadline());
         }
 
         if (request.getJobLevelId() != null) {
@@ -225,7 +231,13 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
         validateJobOwnership(job, companyId);
-        job.setStatus(normalizeJobStatus(status));
+        String normalizedStatus = normalizeJobStatus(status);
+        job.setStatus(normalizedStatus);
+        if (JobStatus.CLOSED.name().equals(normalizedStatus)) {
+            job.setClosedAt(java.time.LocalDateTime.now());
+        } else {
+            job.setClosedAt(null);
+        }
         Job saved = jobRepository.save(job);
         return JobResponse.fromJob(saved);
     }
@@ -280,6 +292,9 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new DataNotFoundException("Job not found with id: " + jobId));
         validateJobOwnership(job, companyId);
+        if (jobApplicationRepository.existsByJobId(jobId)) {
+            throw new InvalidBodyException("Cannot delete a job that already has applications");
+        }
         jobRepository.delete(job);
     }
 

@@ -46,7 +46,7 @@ spring:
         - id: job-service
           uri: lb://JOB-SERVICE
           predicates:
-            - Path=/api/v1/jobs/**
+            - Path=/api/v1/jobs/**, /api/v1/applications/**
         - id: company-service
           uri: lb://COMPANY-SERVICE
           predicates:

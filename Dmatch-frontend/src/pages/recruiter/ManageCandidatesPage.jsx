@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-     Users, Briefcase, Search, Clock,
+     Users, Search, Clock, Loader2, CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,9 +21,7 @@ import useAuthStore from '@/store/useAuthStore';
 import { useCompanyByOwner } from '@/hooks/useCompanies';
 import { useJobsByCompany } from '@/hooks/useJobs';
 import { Building2 } from 'lucide-react';
-import {
-     SAMPLE_APPLICATIONS,
-} from '@/data/sampleData';
+import { useCompanyApplications, useUpdateApplicationStatus } from '@/hooks/useApplications';
 
 // ==================== Status Config ====================
 const APPLICATION_STATUS = {
@@ -31,12 +29,21 @@ const APPLICATION_STATUS = {
      REVIEWING: { label: 'Đang xem xét', variant: 'default' },
      ACCEPTED: { label: 'Đã chấp nhận', variant: 'default' },
      REJECTED: { label: 'Đã từ chối', variant: 'destructive' },
+     WITHDRAWN: { label: 'Đã rút', variant: 'outline' },
+};
+
+const formatDate = (dateStr) => {
+     if (!dateStr) return '—';
+     return new Date(dateStr).toLocaleDateString('vi-VN', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+     });
 };
 
 const ManageCandidatesPage = () => {
      const user = useAuthStore((s) => s.user);
      const [selectedJobId, setSelectedJobId] = useState('all');
      const [searchTerm, setSearchTerm] = useState('');
+     const [toast, setToast] = useState(null);
 
      // Fetch company
      const { data: apiCompany, isLoading: isLoadingCompany } = useCompanyByOwner(user?.id);
@@ -44,8 +51,26 @@ const ManageCandidatesPage = () => {
      // Fetch jobs for filter dropdown
      const { data: jobsData, isLoading: isLoadingJobs } = useJobsByCompany(apiCompany?.id, { limit: 100 });
 
-     // Sample data fallback
-     const isLoading = apiCompany ? (isLoadingCompany || isLoadingJobs) : false;
+     const applicationParams = {
+          page: 1,
+          limit: 100,
+          job_id: selectedJobId === 'all' ? undefined : Number(selectedJobId),
+          keyword: searchTerm || undefined,
+     };
+     const {
+          data: applicationsData,
+          isLoading: isApplicationsLoading,
+     } = useCompanyApplications(apiCompany?.id, applicationParams, { enabled: !!apiCompany?.id });
+     const updateStatusMutation = useUpdateApplicationStatus();
+
+     useEffect(() => {
+          if (toast) {
+               const timer = setTimeout(() => setToast(null), 4000);
+               return () => clearTimeout(timer);
+          }
+     }, [toast]);
+
+     const isLoading = isLoadingCompany || (!!apiCompany && isLoadingJobs);
 
      if (isLoading) {
           return (
@@ -79,19 +104,20 @@ const ManageCandidatesPage = () => {
      }
 
      const jobs = jobsData?.content || [];
+     const filteredApplications = applicationsData?.content || [];
 
-     // TODO: Cần implement application-service backend trước
-     // Khi có API: const { data: applications } = useApplicationsByCompany(company.id, { job_id: selectedJobId });
-     // Endpoint cần có: GET /api/v1/applications (với filter company_id, job_id)
-     const applications = SAMPLE_APPLICATIONS;
-     const isApplicationsLoading = false;
-
-     // Filter applications
-     const filteredApplications = applications.filter((app) => {
-          const matchesSearch = !searchTerm || app.candidateName.toLowerCase().includes(searchTerm.toLowerCase());
-          const matchesJob = selectedJobId === 'all' || app.jobId.toString() === selectedJobId;
-          return matchesSearch && matchesJob;
-     });
+     const handleStatusChange = async (applicationId, status) => {
+          setToast(null);
+          try {
+               await updateStatusMutation.mutateAsync({ applicationId, status });
+               setToast({ type: 'success', message: 'Đã cập nhật trạng thái ứng tuyển' });
+          } catch (err) {
+               setToast({
+                    type: 'error',
+                    message: err.response?.data?.message || 'Không thể cập nhật trạng thái',
+               });
+          }
+     };
 
      return (
           <div className="space-y-6">
@@ -105,6 +131,23 @@ const ManageCandidatesPage = () => {
                          Xem và quản lý hồ sơ ứng viên ứng tuyển vào các tin tuyển dụng
                     </p>
                </div>
+
+               {toast && (
+                    <div
+                         className={`flex items-center gap-2 rounded-lg p-3 text-sm ${
+                              toast.type === 'success'
+                                   ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                   : 'border border-destructive/20 bg-destructive/10 text-destructive'
+                         }`}
+                    >
+                         {toast.type === 'success' ? (
+                              <CheckCircle2 size={16} className="shrink-0" />
+                         ) : (
+                              <AlertCircle size={16} className="shrink-0" />
+                         )}
+                         {toast.message}
+                    </div>
+               )}
 
                {/* Filters */}
                <div className="flex flex-col sm:flex-row gap-3">
@@ -135,7 +178,11 @@ const ManageCandidatesPage = () => {
                {/* Content */}
                <Card>
                     <CardContent className="p-0">
-                         {filteredApplications.length === 0 ? (
+                         {isApplicationsLoading ? (
+                              <div className="flex items-center justify-center py-20">
+                                   <Loader2 size={28} className="animate-spin text-primary" />
+                              </div>
+                         ) : filteredApplications.length === 0 ? (
                               /* ===== Empty State ===== */
                               <div className="flex flex-col items-center justify-center py-20 text-center px-4">
                                    <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -169,21 +216,42 @@ const ManageCandidatesPage = () => {
                                                   <TableRow key={app.id}>
                                                        <TableCell>
                                                             <div>
-                                                                 <p className="font-medium text-foreground">{app.candidateName}</p>
-                                                                 <p className="text-xs text-muted-foreground">{app.candidateEmail}</p>
+                                                                 <p className="font-medium text-foreground">{app.candidate_name || app.candidate_email}</p>
+                                                                 <p className="text-xs text-muted-foreground">{app.candidate_email}</p>
                                                             </div>
                                                        </TableCell>
-                                                       <TableCell className="text-sm">{app.jobTitle}</TableCell>
+                                                       <TableCell className="text-sm">{app.job_title}</TableCell>
                                                        <TableCell className="text-sm text-muted-foreground">
                                                             <span className="flex items-center gap-1">
                                                                  <Clock size={12} />
-                                                                 {app.appliedAt}
+                                                                 {formatDate(app.applied_at)}
                                                             </span>
                                                        </TableCell>
                                                        <TableCell>
-                                                            <Badge variant={statusCfg.variant}>
-                                                                 {statusCfg.label}
-                                                            </Badge>
+                                                            {app.status === 'WITHDRAWN' ? (
+                                                                 <Badge variant={statusCfg.variant}>
+                                                                      {statusCfg.label}
+                                                                 </Badge>
+                                                            ) : (
+                                                                 <Select
+                                                                      value={app.status}
+                                                                      onValueChange={(status) => handleStatusChange(app.id, status)}
+                                                                      disabled={updateStatusMutation.isPending}
+                                                                 >
+                                                                      <SelectTrigger className="h-8 w-40">
+                                                                           <SelectValue />
+                                                                      </SelectTrigger>
+                                                                      <SelectContent>
+                                                                           {Object.entries(APPLICATION_STATUS)
+                                                                                .filter(([status]) => status !== 'WITHDRAWN')
+                                                                                .map(([status, cfg]) => (
+                                                                                     <SelectItem key={status} value={status}>
+                                                                                          {cfg.label}
+                                                                                     </SelectItem>
+                                                                                ))}
+                                                                      </SelectContent>
+                                                                 </Select>
+                                                            )}
                                                        </TableCell>
                                                   </TableRow>
                                              );

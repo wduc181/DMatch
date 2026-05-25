@@ -43,6 +43,12 @@ public class JobResponse {
     @JsonProperty("company_logo_url")
     private String companyLogoUrl;
 
+    @JsonProperty("application_deadline")
+    private LocalDateTime applicationDeadline;
+
+    @JsonProperty("closed_at")
+    private LocalDateTime closedAt;
+
     @JsonProperty("job_level")
     private JobLevelResponse jobLevel;
 
@@ -76,6 +82,8 @@ public class JobResponse {
                 .salaryMax(job.getSalaryMax())
                 .currency(job.getCurrency())
                 .companyId(job.getCompanyId())
+                .applicationDeadline(job.getApplicationDeadline())
+                .closedAt(job.getClosedAt())
                 .jobLevel(job.getJobLevel() == null ? null : JobLevelResponse.fromJobLevel(job.getJobLevel()))
                 .categories(mapCategories(job.getCategories()))
                 .createdAt(job.getCreatedAt())
@@ -101,6 +109,8 @@ public class JobResponse {
                 .companyId(job.getCompanyId())
                 .companyName(companyName)
                 .companyLogoUrl(companyLogoUrl)
+                .applicationDeadline(job.getApplicationDeadline())
+                .closedAt(job.getClosedAt())
                 .jobLevel(job.getJobLevel() == null ? null : JobLevelResponse.fromJobLevel(job.getJobLevel()))
                 .categories(mapCategories(job.getCategories()))
                 .createdAt(job.getCreatedAt())

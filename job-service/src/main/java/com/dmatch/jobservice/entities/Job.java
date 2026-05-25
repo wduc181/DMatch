@@ -55,6 +55,12 @@ public class Job {
     @Column(name = "company_id", nullable = false)
     private Long companyId;
 
+    @Column(name = "application_deadline")
+    private LocalDateTime applicationDeadline;
+
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_level_id")
     private JobLevel jobLevel;

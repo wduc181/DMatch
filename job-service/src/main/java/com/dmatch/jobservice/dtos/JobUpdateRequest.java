@@ -3,6 +3,7 @@ package com.dmatch.jobservice.dtos;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -31,6 +32,9 @@ public class JobUpdateRequest {
 
     @JsonProperty("currency")
     private String currency;
+
+    @JsonProperty("application_deadline")
+    private LocalDateTime applicationDeadline;
 
     @JsonProperty("job_level_id")
     private Long jobLevelId;

@@ -1,4 +1,4 @@
-import { Clock, Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, Eye, CheckCircle2, XCircle, Undo2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +22,11 @@ const STATUS_CONFIG = {
           label: 'Đã từ chối',
           icon: XCircle,
           className: 'bg-red-100 text-red-700 border-red-200',
+     },
+     WITHDRAWN: {
+          label: 'Đã rút',
+          icon: Undo2,
+          className: 'bg-slate-100 text-slate-700 border-slate-200',
      },
 };
 

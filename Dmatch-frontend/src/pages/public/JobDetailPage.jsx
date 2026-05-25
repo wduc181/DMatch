@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useJob } from '@/hooks/useJobs';
 import { useCompany } from '@/hooks/useCompanies';
+import { useMyApplicationForJob } from '@/hooks/useApplications';
+import useAuthStore from '@/store/useAuthStore';
 import JobCompanySidebar from '@/features/jobs/components/JobCompanySidebar';
 import ApplyJobDialog from '@/features/jobs/components/ApplyJobDialog';
 
@@ -60,6 +62,10 @@ const timeAgo = (dateStr) => {
 const JobDetailPage = () => {
      const { id } = useParams();
      const [applyOpen, setApplyOpen] = useState(false);
+     const { isAuthenticated, user } = useAuthStore();
+     const isCandidate = isAuthenticated
+          && user?.roles?.includes('USER')
+          && !user?.roles?.some((role) => ['COMPANY', 'ADMIN'].includes(role));
 
      // Fetch job detail từ API
      const {
@@ -73,6 +79,10 @@ const JobDetailPage = () => {
           data: company,
           isLoading: isCompanyLoading,
      } = useCompany(job?.company_id);
+
+     const { data: myApplication } = useMyApplicationForJob(id, {
+          enabled: isCandidate && !!id,
+     });
 
      // Loading state
      if (isJobLoading) {
@@ -181,8 +191,9 @@ const JobDetailPage = () => {
                                         size="lg"
                                         className="w-full lg:w-auto text-base px-8"
                                         onClick={() => setApplyOpen(true)}
+                                        disabled={!!myApplication}
                                    >
-                                        Ứng tuyển ngay
+                                        {myApplication ? 'Đã ứng tuyển' : 'Ứng tuyển ngay'}
                                    </Button>
                               </div>
                          </div>
@@ -262,8 +273,9 @@ const JobDetailPage = () => {
                                         size="lg"
                                         className="w-full text-base"
                                         onClick={() => setApplyOpen(true)}
+                                        disabled={!!myApplication}
                                    >
-                                        Ứng tuyển ngay
+                                        {myApplication ? 'Đã ứng tuyển' : 'Ứng tuyển ngay'}
                                    </Button>
                               </div>
                          </div>
@@ -283,6 +295,7 @@ const JobDetailPage = () => {
                <ApplyJobDialog
                     open={applyOpen}
                     onOpenChange={setApplyOpen}
+                    jobId={job.id}
                     jobTitle={job.title}
                />
           </>
