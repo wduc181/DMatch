@@ -14,12 +14,13 @@ spring:
   cloud:
     aws:
       credentials:
-        access-key: ${AWS_ACCESS_KEY}
-        secret-key: ${AWS_SECRET_KEY}
+        access-key: ${AWS_ACCESS_KEY:minioadmin}
+        secret-key: ${AWS_SECRET_KEY:minioadmin}
       region:
-        static: ${AWS_REGION}
+        static: ${AWS_REGION:us-east-1}
       s3:
-        bucket: ${AWS_BUCKET_NAME}
+        bucket: ${AWS_BUCKET_NAME:dmatch-storage}
+        endpoint: ${MINIO_ENDPOINT:}
 
   servlet:
     multipart:
